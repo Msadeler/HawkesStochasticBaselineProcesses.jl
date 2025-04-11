@@ -1,31 +1,29 @@
 
-function Likelihood(theta::Vector,model::model)
+function likelihood(theta::Vector,model::Model)
 
     m = theta[1:end-2]
     a,b = theta[end-2:end]
 
-    transform!(timedata, [:cov]=> ((cov)-> baseline.(cov,m))=> :baselineValue)
+    transform!(model.timedata, [:cov]=> ((cov)-> model.baseline.(cov,m))=> :baselineValue)
 
-    lastJump, lastBas = timedata[timedata.timestamps,[:time, :baselineValue]][1,:]
+    lastJump, lastBas = model.timedata[model.timedata.timestamps,[:time, :baselineValue]][1,:]
 
 
-    if sum(timedata.baselineValue.<0)>0
-        loglik= 1e15
-    end
-
-    if b <= 0 || a <=0
-        log = 1e15
+    if sum(model.timedata.baselineValue.<0)>0
+        1e15    
+    elseif b <= 0 || a <=0
+        loglik = 1e15
     else
         lambdaTk = lastBas
         logIntensity  = log(lambdaTk)
 
-        problem = SampledIntegralProblem(timedata.baselineValue, timedata.time; dim = 1)
+        problem = SampledIntegralProblem(model.timedata.baselineValue, model.timedata.time; dim = 1)
         method = SimpsonsRule()
         val =solve(problem, method)
         compensator = val.u         ### integrate of baseline along the trajectory of the covariate
 
 
-        for realisation in eachrow(timedata[(timedata.timestamps) .& (timedata.time.>lastJump),:])
+        for realisation in eachrow(model.timedata[(model.timedata.timestamps) .& (model.timedata.time.>lastJump),:])
 
             print("lastJump ", lastJump, " time ", realisation.time, " baseline ", realisation.baselineValue, " lastbase ", lastBas )
 
@@ -37,14 +35,13 @@ function Likelihood(theta::Vector,model::model)
             
         end
 
-        lastSimul = timedata[end,:]
+        lastSimul = model.timedata[end,:]
         compensator += (1- exp(-b*(lastSimul.time - lastJump)))*(lambdaTk + a - lastBas)/b
 
         
     end
 
-    logIntensity-compensator
-    
+    return(logIntensity-compensator)
 end
 
 

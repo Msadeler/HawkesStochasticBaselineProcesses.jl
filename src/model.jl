@@ -12,3 +12,10 @@ mutable struct HawkesStochasticBaseline
 end
 
 HawkesStochasticBaseline(a::Real, b::Real,Mmax::Real; drift::Function = x->1.0, diffusion::Function=x->1.0, baseline::Function=x-> 1.0, t0::Real=0.0, InitCov::Vector{Float64}=Float64[0.0]) = HawkesStochasticBaseline(a,b,Mmax, drift, diffusion, baseline, t0, InitCov)   
+
+mutable struct Model 
+    timedata::DataFrames.DataFrame
+    baseline::Function
+end
+
+Model(timedata::DataFrames.DataFrame;baseline::Function=x-> 1.0)= Model(timedata, baseline)
