@@ -1,47 +1,44 @@
 
-function likelihood(theta::Vector,model::Model)
+function likelihood(model::HawkesStochasticBaseline, θ::Vector{Float64}, df::DataFrame)
 
-    m = theta[1:end-2]
-    a,b = theta[end-2:end]
+    a,b,μ = θ
 
-    transform!(model.timedata, [:cov]=> ((cov)-> model.baseline.(cov,m))=> :baselineValue)
+    transform!(df, [:cov]=> ((cov)-> model.baseline.(cov,μ))=> :baselineValue)
+    
+    
+    lastJump, lastBas = df[df.timestamps,[:time, :baselineValue]][1,:]
 
-    lastJump, lastBas = model.timedata[model.timedata.timestamps,[:time, :baselineValue]][1,:]
 
-
-    if sum(model.timedata.baselineValue.<0)>0
-        1e15    
-    elseif b <= 0 || a <=0
-        loglik = 1e15
+    if sum(df.baselineValue.<0)>0 || b <= 0 || a <=0
+        -1e30    
     else
         lambdaTk = lastBas
         logIntensity  = log(lambdaTk)
 
-        problem = SampledIntegralProblem(model.timedata.baselineValue, model.timedata.time; dim = 1)
+        problem = SampledIntegralProblem(df.baselineValue,df.time; dim = 1)
         method = SimpsonsRule()
         val =solve(problem, method)
-        compensator = val.u         ### integrate of baseline along the trajectory of the covariate
+        compensator = val.u     ### integrate of baseline along the trajectory of the covariate
 
 
-        for realisation in eachrow(model.timedata[(model.timedata.timestamps) .& (model.timedata.time.>lastJump),:])
-
-            print("lastJump ", lastJump, " time ", realisation.time, " baseline ", realisation.baselineValue, " lastbase ", lastBas )
+        for realisation in eachrow(df[(df.timestamps) .& (df.time.>lastJump),:])
 
             compensator += (1- exp(-b*(realisation.time - lastJump)))*(lambdaTk + a - lastBas)/b ### compute the compensator
             lambdaTk = realisation.baselineValue + exp(-b*(realisation.time- lastJump))*(lambdaTk+ a - lastBas) ## compute lambda(Tk+1)
             logIntensity+= log(lambdaTk) ## add to the log-intensity
+
             lastJump, lastBas = realisation.time, realisation.baselineValue 
             
             
         end
 
-        lastSimul = model.timedata[end,:]
+        lastSimul = df[end,:]
+
         compensator += (1- exp(-b*(lastSimul.time - lastJump)))*(lambdaTk + a - lastBas)/b
 
-        
+        return(logIntensity-compensator)        
     end
 
-    return(logIntensity-compensator)
 end
 
 

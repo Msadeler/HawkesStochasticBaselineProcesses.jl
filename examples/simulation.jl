@@ -1,19 +1,14 @@
 using HawkesStochasticBaselineProcesses
+using  DataFrames
+using Optim
 
-### simulation of the process
-
-hsb = HawkesStochasticBaseline(0.6, 1, 100; baseline = x-> min(abs(x),2))
-timedata = rand(hsb, 5)
-
-function baseline(x::Float64,mu::Float64)
-    mu*abs(x)     
-end
+hsb = HawkesStochasticBaseline(0.6, 1, Mmax= 1 )
+timedata = rand(hsb,2000.0)
 
 
-### Likelihood computation of the proceess
+hsb_estim = HawkesStochasticBaseline(0.0,1.0, 1; baseline = (x,μ)-> μ)
+## time change
+θ = [1.0,0.0,1.0]
+test = mle(hsb,θ, timedata)
 
-theta = [2,0.6, 1]
-
-model = Model(timedata, baseline)
-
-likelihood(theta,model)
+params(hsb)

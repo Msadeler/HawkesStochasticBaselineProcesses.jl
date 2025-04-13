@@ -3,7 +3,7 @@ import Base.rand
 
 
 
-function rand(hsb::HawkesStochasticBaseline,maxTime::Float64)
+function rand(hsb::HawkesStochasticBaseline,maxTime::Float64)::DataFrame
 
     
     #result = (timestamps=Float64[hsb.t0],timeSimu=Float64[hsb.t0],covValue= [Float64[hsb.InitCov]], covTimestamps=[Float64[hsb.InitCov]]  )
@@ -25,7 +25,7 @@ function rand(hsb::HawkesStochasticBaseline,maxTime::Float64)
         #push!( result.covValue, hsb.diffusion(result.covValue[end])  .* (t_after-t) .+ hsb.drift(result.covValue[end]) .* rand(Normal(0, sqrt(t_after-t))) )
         cov_val = hsb.diffusion(cov_val)  .* (t_after-t) .+ hsb.drift(cov_val) .* rand(Normal(0, sqrt(t_after-t)))
         
-        mu_x = hsb.baseline(cov_val)
+        mu_x = hsb.baseline(cov_val, hsb.μ)
         candidate_intensity = mu_x + aux*exp(-hsb.b*(t_after - last_timestamp))
         
         flag = t_after < maxTime
@@ -38,9 +38,13 @@ function rand(hsb::HawkesStochasticBaseline,maxTime::Float64)
 
         end
         t = t_after
+        if flag 
 
-        result= [result;DataFrame(:time => t, :timestamps=> condition, :cov => cov_val)]
+            result= [result;DataFrame(:time => t, :timestamps=> condition, :cov => cov_val)]
+        end
+
     end 
+
 
     result= [result;DataFrame(:time => Float64(maxTime), :timestamps=> Bool(false), :cov => Float64[cov_val])]
 
@@ -49,7 +53,7 @@ function rand(hsb::HawkesStochasticBaseline,maxTime::Float64)
 end
 
 
-function rand(hsb::HawkesStochasticBaseline,nJump::Int)
+function rand(hsb::HawkesStochasticBaseline,nJump::Int)::DataFrame
 
     
     #result = (timestamps=Float64[hsb.t0],timeSimu=Float64[hsb.t0],covValue= [Float64[hsb.InitCov]], covTimestamps=[Float64[hsb.InitCov]]  )
@@ -73,7 +77,7 @@ function rand(hsb::HawkesStochasticBaseline,nJump::Int)
         
         cov_val = hsb.diffusion(cov_val)  .* (t_after-t) .+ hsb.drift(cov_val) .* rand(Normal(0, sqrt(t_after-t)))
         
-        mu_x = hsb.baseline(cov_val)
+        mu_x = hsb.baseline(cov_val, hsb.μ)
         candidate_intensity = mu_x + aux*exp(-hsb.b*(t_after - last_timestamp))
         
         condition = upper_intensity*rand()<= candidate_intensity
