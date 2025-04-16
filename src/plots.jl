@@ -14,16 +14,16 @@ const symbol2typeplot = Dict(
     :IP => IntensityProcessPlot
 )
 
-function plot(hsb::HawkesStochasticBaseline, timedata::DataFrames.DataFrame,type::Symbol=:T)
+function plot(hsb::HawkesStochasticBaseline, timedata::DataFrame,type::Symbol=:T)
     plot(hsb, timedata, symbol2typeplot[type])
     
 end
 
-function plot(hsb::HawkesStochasticBaseline, timedata::DataFrames.DataFrame, ::Type{TrajectoryPlot})
+function plot(hsb::HawkesStochasticBaseline, timedata::DataFrame, ::Type{TrajectoryPlot})
     bin_cov =0.1
     maxCov, minCov = maximum(timedata.cov)+bin_cov, minimum(timedata.cov)-bin_cov
     db = range(minCov, step = bin_cov, length=trunc(Int, (maxCov-minCov)/bin_cov)+1)
-    baselineHeatMap =  reshape( repeat(hsb.baseline.(db), size(timedata.time,1)),:, size(timedata.time,1))
+    baselineHeatMap =  reshape( repeat(hsb.baseline.(db, hsb.μ), size(timedata.time,1)),:, size(timedata.time,1))
     
     plt = plot(heatmap( timedata.time,db , baselineHeatMap,xlabel="time",color=:deep) )
     plot!(plt, timedata.time, timedata.cov, label="covariable")
@@ -31,9 +31,9 @@ function plot(hsb::HawkesStochasticBaseline, timedata::DataFrames.DataFrame, ::T
     plot!( label=["covariable", "event"])
 end
 
-function plot(hsb::HawkesStochasticBaseline, timedata::DataFrames.DataFrame, ::Type{IntensityPlot})
+function plot(hsb::HawkesStochasticBaseline, timedata::DataFrame, ::Type{IntensityPlot})
 
-    timedata[!, :baselineValue] = hsb.baseline.(timedata.cov)
+    timedata[!, :baselineValue] = hsb.baseline.(timedata.cov,hsb.μ)
     timedata[!, :intensityVal] = timedata[:, :baselineValue]
 
     intensityJumpTime= timedata[timedata.timestamps,:baselineValue][1]
@@ -53,9 +53,9 @@ function plot(hsb::HawkesStochasticBaseline, timedata::DataFrames.DataFrame, ::T
 end
 
 
-function plot(hsb::HawkesStochasticBaseline, timedata::DataFrames.DataFrame,::Type{IntensityProcessPlot})
+function plot(hsb::HawkesStochasticBaseline, timedata::DataFrame,::Type{IntensityProcessPlot})
 
-    timedata[!, :baselineValue] = hsb.baseline.(timedata.cov)
+    timedata[!, :baselineValue] = hsb.baseline.(timedata.cov,hsb.μ)
     timedata[!, :intensityVal] = timedata[:, :baselineValue]
 
     intensityJumpTime= timedata[timedata.timestamps,:baselineValue][1]
