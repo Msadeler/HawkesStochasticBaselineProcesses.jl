@@ -1,22 +1,35 @@
-abstract type FamilyModel end
+abstract type AbstractFamilyBaseline  end
 
 using Polynomials
 
 
 
-struct UnivariatePolynomialFamilyBaseline <: FamilyModel
-    coeff::Function
+struct UnivariatePolynomialFamilyBaseline <:AbstractFamilyBaseline
+    coeff::Vector{Function}
 end
 
-function hessian(x::Float64,μ::Float64;baseline::UnivariatePolynomialFamilyBaseline)
-    derivative(derivative(Polynomial(baseline.coeff(x), :μ)))(μ)
+(gₘ::UnivariatePolynomialFamilyBaseline)(x::Real,m::Real) = Polynomial(gₘ.coeff(x), :m)(m)
+
+
+function hessian(gₘ::UnivariatePolynomialFamilyBaseline,x::Real,μ::Real)
+    derivative(derivative(Polynomial(gₘ.coeff(x), :m)))(m)
 end
 
 
-function gradient(x::Float64,μ::Float64;baseline::UnivariatePolynomialFamilyBaseline)
-    derivative(Polynomial(baseline.coeff(x), :μ))(μ)
+function gradient(gₘ::UnivariatePolynomialFamilyBaseline,x::Float64,μ::Float64)
+    derivative(Polynomial(gₘ.coeff(x), :m))(m)
 end
 
-function hessian(x::Float64,μ::Float64;baseline::UnivariatePolynomialFamilyBaseline)
-    derivative(derivative(Polynomial(baseline.coeff(x), :μ)))(μ)
+struct LinearFamilyBaseline <:AbstractFamilyBaseline
+    coeff::Vector{Function}
+end
+
+(gₘ::LinearFamilyBaseline)(x::Union{Real,Vector},m::Vector) = [fi(x) for fi in gₘ.coeff]'*m
+
+function gradient(gₘ::LinearFamilyBaseline, x::Union{Real,Vector}, μ::Vector)
+    [fi(x) for fi in gₘ.coeff]   
+end
+
+function hessian(gₘ::LinearFamilyBaseline, x::Union{Real,Vector}, m::Vector)
+    zeros(length(m), length(m))   
 end

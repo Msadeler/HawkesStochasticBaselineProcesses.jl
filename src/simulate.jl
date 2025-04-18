@@ -7,10 +7,10 @@ function rand(hsb::HawkesStochasticBaseline,maxTime::Float64)::DataFrame
 
     
     #result = (timestamps=Float64[hsb.t0],timeSimu=Float64[hsb.t0],covValue= [Float64[hsb.InitCov]], covTimestamps=[Float64[hsb.InitCov]]  )
-    result = DataFrame(:time => Float64(hsb.t0), :timestamps=> Bool(false), :cov => Vector{Float64}(hsb.InitCov))
+    result = DataFrame(:time => Float64(hsb.t₀), :timestamps=> Bool(false), :cov =>hsb.X₀)
     last_timestamp = 0
-    cov_val = hsb.InitCov
-    t=hsb.t0
+    cov_val = hsb.X₀
+    t=hsb.t₀
 
     aux = 0
     flag = t < maxTime
@@ -24,8 +24,7 @@ function rand(hsb::HawkesStochasticBaseline,maxTime::Float64)::DataFrame
         #push!(result.timeSimu, t_after)
         #push!( result.covValue, hsb.diffusion(result.covValue[end])  .* (t_after-t) .+ hsb.drift(result.covValue[end]) .* rand(Normal(0, sqrt(t_after-t))) )
         cov_val = hsb.diffusion(cov_val)  .* (t_after-t) .+ hsb.drift(cov_val) .* rand(Normal(0, sqrt(t_after-t)))
-        
-        mu_x = hsb.baseline(cov_val, hsb.μ)
+        mu_x = hsb.gₘ(cov_val, hsb.m)
         candidate_intensity = mu_x + aux*exp(-hsb.b*(t_after - last_timestamp))
         
         flag = t_after < maxTime
@@ -47,6 +46,7 @@ function rand(hsb::HawkesStochasticBaseline,maxTime::Float64)::DataFrame
 
 
     result= [result;DataFrame(:time => Float64(maxTime), :timestamps=> Bool(false), :cov => Float64[cov_val])]
+    data!(hsb, result)
 
     return result
 
@@ -57,10 +57,10 @@ function rand(hsb::HawkesStochasticBaseline,nJump::Int)::DataFrame
 
     
     #result = (timestamps=Float64[hsb.t0],timeSimu=Float64[hsb.t0],covValue= [Float64[hsb.InitCov]], covTimestamps=[Float64[hsb.InitCov]]  )
-    result = DataFrame(:time => Float64(hsb.t0), :timestamps=> Bool(false), :cov => Vector{Float64}(hsb.InitCov))
+    result = DataFrame(:time => Float64(hsb.t₀), :timestamps=> Bool(false), :cov =>hsb.X₀)
     last_timestamp = 0
-    cov_val = hsb.InitCov
-    t=hsb.t0
+    cov_val = hsb.X₀
+    t=hsb.t₀
 
     aux = 0
     nSimul = 0
@@ -77,7 +77,7 @@ function rand(hsb::HawkesStochasticBaseline,nJump::Int)::DataFrame
         
         cov_val = hsb.diffusion(cov_val)  .* (t_after-t) .+ hsb.drift(cov_val) .* rand(Normal(0, sqrt(t_after-t)))
         
-        mu_x = hsb.baseline(cov_val, hsb.μ)
+        mu_x = hsb.gₘ(cov_val, hsb.m)
         candidate_intensity = mu_x + aux*exp(-hsb.b*(t_after - last_timestamp))
         
         condition = upper_intensity*rand()<= candidate_intensity
@@ -94,7 +94,7 @@ function rand(hsb::HawkesStochasticBaseline,nJump::Int)::DataFrame
         result= [result;DataFrame(:time => t, :timestamps=> condition, :cov => cov_val)]
     end 
 
-
+    data!(hsb, result)
     return result
 
 end

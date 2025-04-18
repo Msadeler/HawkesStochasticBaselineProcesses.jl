@@ -1,4 +1,13 @@
-function mle(model::HawkesStochasticBaseline, θ::Vector{Float64},  data::DataFrame=DataFrame(); fixed::Union{Vector{Int},Vector{Bool}} = Bool[], method = NelderMead())
+function mle(model::HawkesStochasticBaseline,θ::Union{Nothing,Vector}=nothing, data::DataFrame=DataFrame(); fixed::Union{Vector{Int},Vector{Bool}} = Bool[], method = NelderMead())
+    
+    if isnothing(θ)
+        θ = params(model)
+    end
+    
+    data!(model, data)
+    gᵢX!(model, [[[gᵢ(Xₜ) for gᵢ in  model.gₘ.coeff] for Xₜ in df.cov]'...;])
+    ∫gᵢX!(model, [ solve(SampledIntegralProblem(model.gᵢX[:,n], model.timedata.time; dim = 1), SimpsonsRule()).u for n in 1:length(model.m)] )
+
     if fixed isa Vector{Bool}
         res = Int[]
         for (i,v) in enumerate(fixed)
@@ -12,14 +21,17 @@ function mle(model::HawkesStochasticBaseline, θ::Vector{Float64},  data::DataFr
     unfixed = setdiff(1:length(θ),fixed)
     p = θ[unfixed]
 
-    function f(θ′)
-        θ[unfixed] = θ′
-        -likelihood(model, θ,data)
-    end
 
     res = nothing
     print(p)
+
+    function f(θ′)
+        θ[unfixed] = θ′
+        -likelihood(model, θ,data, model.gᵢX, model.∫gᵢX)
+    end
+
     if method isa Optim.ZerothOrderOptimizer
+
         res = optimize(f, p, method=method)
     
     elseif method isa Optim.FirstOrderOptimizer
@@ -46,3 +58,5 @@ function mle(model::HawkesStochasticBaseline, θ::Vector{Float64},  data::DataFr
     params!(model, p)
     return res
 end
+
+

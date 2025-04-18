@@ -16,16 +16,17 @@ const Parameters = Vector{Float64}
 export plot
 export likelihood 
 export mle
-export params, params!
+export nbparams,params, params!, data!, gᵢX!,∫gᵢX! 
 
-
+include("family.jl")
 include("model.jl")
 include("simulate.jl")
 include("plots.jl")
 include("likelihood.jl")
 include("mle.jl")
-include("family.jl")
 
+
+export UnivariatePolynomialFamilyBaseline, LinearFamilyBaseline,gradient,hessian,baseline, AbstractFamilyBaseline
 export HawkesStochasticBaseline
 
 end
