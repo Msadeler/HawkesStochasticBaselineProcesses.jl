@@ -3,46 +3,27 @@ using  DataFrames
 using Optim
 using Plots
 using Integrals
+using LinearAlgebra
+using Distributions
 
-### Baseline
+method = LBFGS()
 
-f(x)=1
-g(x)=min(x^2,4)
-coeff = [f; g]
+Optim.order(method)
+### Here gₘ(x) = m₁ + (m₂-m₁)exp(-‖x - x*‖² / 2)    
+
+
+g₁(x)=1-exp(-norm(x-[0.2,0.2])^2/2) 
+g₂(x)= exp(-norm(x-[0.2,0.2])^2/2)
+coeff = [g₁; g₂]
 gₘ = LinearFamilyBaseline(coeff)
 
+### Xₜ is a 2-dimensionnal Ornstein–Uhlenbeck process : dXₜ = -b(a-Xₜ)dt + σdWₜ 
 
-### EDS coefficients
-
-drift(x)= x
-diffusion(x)=1
-
-### simulation
-model = HawkesStochasticBaseline(0.6, 1.0, [1 ,0.2];Mmax= 10, gₘ = gₘ, drift = drift, diffusion = diffusion, X₀=0.0 )
-df = rand(model,5000)
+drift(x)= 0.05
+diffusion(x)=-0.05.*x
 
 
 
-#### Estimation
-model = HawkesStochasticBaseline(1, 0.0, [1.0,1.0]; gₘ = gₘ)
-θ = [1, 0.0, 1.0,1.0]
-
-
-### gradient likelihood
-
-if isnothing(model.data)
-    print("No data has been providen")
-end
-
-model = HawkesStochasticBaseline(0, 1.0, [1.0 ,1.0];gₘ = gₘ)
-
-data!(model, df)
-gᵢX!(model, [[[gᵢ(Xₜ) for gᵢ in  model.gₘ.coeff] for Xₜ in df.cov]'...;])
-∫gᵢX!(model, [ solve(SampledIntegralProblem(model.gᵢX[:,n], model.timedata.time; dim = 1), SimpsonsRule()).u for n in 1:length(model.m)] )
-
-##
-
-timeJump = df[df.timestamps, :]
-∇λTₖ = [ timeJump.∇gₘX ;  0 ;  0 ]
-∇Λ = [model  ; 0 ; 0 ]
-λTₖ = model.baseline(timeJump.time[1], model.m)
+### Definition and simulation of the model
+model = HawkesStochasticBaseline(0.6, 1.0, [1 ,0.2];Mmax= 10, gₘ = gₘ, drift = drift, diffusion = diffusion, X₀=[0.0,0.0] )
+df = rand(model,2000.0)

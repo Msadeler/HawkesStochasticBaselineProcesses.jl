@@ -1,9 +1,5 @@
 abstract type AbstractFamilyBaseline  end
 
-using Polynomials
-
-
-
 struct UnivariatePolynomialFamilyBaseline <:AbstractFamilyBaseline
     coeff::Vector{Function}
 end
@@ -24,12 +20,12 @@ struct LinearFamilyBaseline <:AbstractFamilyBaseline
     coeff::Vector{Function}
 end
 
-(gₘ::LinearFamilyBaseline)(x::Union{Real,Vector},m::Vector) = [fi(x) for fi in gₘ.coeff]'*m
+(gₘ::LinearFamilyBaseline)(x::Union{Real,Vector},m::Union{Real,Vector}) = dot([gᵢ(x) for gᵢ in gₘ.coeff],m) 
 
-function gradient(gₘ::LinearFamilyBaseline, x::Union{Real,Vector}, μ::Vector)
+function gradient(gₘ::LinearFamilyBaseline, x::Union{Real,Vector}, m::Union{Real,Vector})
     [fi(x) for fi in gₘ.coeff]   
 end
 
-function hessian(gₘ::LinearFamilyBaseline, x::Union{Real,Vector}, m::Vector)
+function hessian(gₘ::LinearFamilyBaseline, x::Union{Real,Vector}, m::Union{Real,Vector})
     zeros(length(m), length(m))   
 end

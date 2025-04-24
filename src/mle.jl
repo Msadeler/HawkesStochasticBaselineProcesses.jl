@@ -1,13 +1,11 @@
-function mle(model::HawkesStochasticBaseline,θ::Union{Nothing,Vector}=nothing, data::DataFrame=DataFrame(); fixed::Union{Vector{Int},Vector{Bool}} = Bool[], method = NelderMead())
+function mle(model::HawkesStochasticBaseline; data::DataFrame=DataFrame(), θ::Union{Nothing,Vector}=nothing,fixed::Union{Vector{Int},Vector{Bool}} = Bool[], method = NelderMead())
     
     if isnothing(θ)
         θ = params(model)
     end
     
     data!(model, data)
-    gᵢX!(model, [[[gᵢ(Xₜ) for gᵢ in  model.gₘ.coeff] for Xₜ in df.cov]'...;])
-    ∫gᵢX!(model, [ solve(SampledIntegralProblem(model.gᵢX[:,n], model.timedata.time; dim = 1), SimpsonsRule()).u for n in 1:length(model.m)] )
-
+    
     if fixed isa Vector{Bool}
         res = Int[]
         for (i,v) in enumerate(fixed)
@@ -27,7 +25,7 @@ function mle(model::HawkesStochasticBaseline,θ::Union{Nothing,Vector}=nothing, 
 
     function f(θ′)
         θ[unfixed] = θ′
-        -likelihood(model, θ,data, model.gᵢX, model.∫gᵢX)
+        -likelihood(model, θ,data)
     end
 
     if method isa Optim.ZerothOrderOptimizer
@@ -37,16 +35,19 @@ function mle(model::HawkesStochasticBaseline,θ::Union{Nothing,Vector}=nothing, 
     elseif method isa Optim.FirstOrderOptimizer
         function g!(storage, θ′)
             θ[unfixed] = θ′
-            dlnL = gradient(model, θ)
+            dlnL = gradient(model, θ, data)
             storage .= -dlnL[unfixed]
         end
         res = optimize(f, g!, p, method=method)
+
     elseif method isa Optim.SecondOrderOptimizer
+
         function g!(storage, θ′)
             θ[unfixed] = θ′
-            dlnL = gradient(model, θ)
+            dlnL = gradient(model, θ, data)
             storage .= -dlnL[unfixed]
         end
+
         function h!(storage, θ′)
             θ[unfixed] = θ′
             storage .= -hessian(model, θ, profile=profile)[unfixed, unfixed]

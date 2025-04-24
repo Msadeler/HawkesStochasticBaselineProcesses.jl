@@ -18,6 +18,7 @@ end
 HawkesStochasticBaseline(a::Real, b::Real, m::Union{Vector,Real}=1.0 ; Mmax::Real=1e15, gₘ::Union{<:AbstractFamilyBaseline,<:Function}=(x,m)-> m, drift::Function = x->0.0, diffusion::Function=x->0.0, t₀::Real=0.0, X₀::Union{Real,Vector}=[0.0],timedata::Nothing=nothing, gᵢX::Union{Nothing,Matrix}=nothing,∫gᵢX::Union{Nothing, Vector}=nothing) = HawkesStochasticBaseline(a,b, m , Mmax,gₘ, drift, diffusion, t₀,X₀,timedata,gᵢX,∫gᵢX)   
 
 
+
 nbparams(model::HawkesStochasticBaseline)::Int = 2 + length(model.m)
 
 params(model::HawkesStochasticBaseline)::Parameters = [model.a; model.b; model.m]

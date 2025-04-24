@@ -1,7 +1,6 @@
 import Plots.plot
 import Plots.plot!
 
-
 abstract type TrajectoryPlot end
 abstract type IntensityPlot end
 abstract type IntensityProcessPlot end

@@ -6,17 +6,26 @@ using  DataFrames
 using Plots
 using Integrals
 using  Optim
+using Polynomials
+using LinearAlgebra
 
+import Plots.plot
+import Plots.plot!
+import Base.rand
 
 
 const Parameters = Vector{Float64}
 
-
-
 export plot
-export likelihood 
+export likelihood, gradient
 export mle
+
+
 export nbparams,params, params!, data!, gᵢX!,∫gᵢX! 
+export UnivariatePolynomialFamilyBaseline, LinearFamilyBaseline,gradient,hessian,baseline, AbstractFamilyBaseline
+
+
+export HawkesStochasticBaseline
 
 include("family.jl")
 include("model.jl")
@@ -26,7 +35,5 @@ include("likelihood.jl")
 include("mle.jl")
 
 
-export UnivariatePolynomialFamilyBaseline, LinearFamilyBaseline,gradient,hessian,baseline, AbstractFamilyBaseline
-export HawkesStochasticBaseline
 
 end
