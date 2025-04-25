@@ -1,6 +1,6 @@
 
 function likelihood(model::HawkesStochasticBaseline, θ::Vector{Float64}, df::DataFrame)
-    print("likelihood ", θ)
+
     params!(model,θ)
     if isnothing(model.timedata)
         data!(model, df)
@@ -50,7 +50,7 @@ end
 
 
 function gradient(model::HawkesStochasticBaseline, θ::Vector, df::DataFrame)
-    print("grad ", θ)
+
     params!(model,θ)
 
     if isnothing(model.timedata)

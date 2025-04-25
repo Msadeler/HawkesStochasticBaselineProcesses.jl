@@ -112,9 +112,8 @@ function rand(hsb::HawkesStochasticBaseline,nJump::Int,::Type{UniDimCov})::DataF
 
 end
 
-function rand(hsb::HawkesStochasticBaseline,maxTime::Float64, ::Type{MultiDimCov})::DataFrame
+function rand(hsb::HawkesStochasticBaseline,maxTime::Float64, ::Type{MultiDimCov})
 
-    
     #result = (timestamps=Float64[hsb.t0],timeSimu=Float64[hsb.t0],covValue= [Float64[hsb.InitCov]], covTimestamps=[Float64[hsb.InitCov]]  )
     result = DataFrame(:time => Float64(hsb.t₀), :timestamps=> Bool(false), :cov =>Vector[hsb.X₀])
     last_timestamp = 0
@@ -125,16 +124,17 @@ function rand(hsb::HawkesStochasticBaseline,maxTime::Float64, ::Type{MultiDimCov
     flag = t < maxTime
     
     while flag
-        
         upper_intensity = hsb.Mmax + aux*(aux>=0)
         t_after = t + rand(Exponential(1 / upper_intensity))
         
 
         cov_val = cov_val .+ hsb.diffusion(cov_val)  .* (t_after-t) .+ hsb.drift(cov_val) .* rand(Normal(0, sqrt(t_after-t)), length(hsb.m))
+
         gₘXₜ = hsb.gₘ(cov_val, hsb.m)
         candidate_intensity = gₘXₜ + aux*exp(-hsb.b*(t_after - last_timestamp))
         
         flag = t_after < maxTime
+        
         condition = upper_intensity*rand()<= candidate_intensity
         
         if condition & flag 
@@ -143,7 +143,9 @@ function rand(hsb::HawkesStochasticBaseline,maxTime::Float64, ::Type{MultiDimCov
             last_timestamp = t_after
 
         end
+
         t = t_after
+        
         if flag 
 
             result= [result;DataFrame(:time => t, :timestamps=> condition, :cov => Vector[cov_val])]
