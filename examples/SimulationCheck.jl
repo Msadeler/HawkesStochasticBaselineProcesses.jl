@@ -4,10 +4,12 @@ using HawkesStochasticBaselineProcesses
 using DataFrames
 using Optim
 using LinearAlgebra
-
+using Makie
 
 
 ########### Simulation with python 
+
+
 
 py"""
 import numpy as np
@@ -17,12 +19,14 @@ def simulate_time(a,b,m_max,scheme_eds, baseline, t0=0, arg_mu ={}, arg_cov={}, 
     t=t0
     timestamps = [t]
     time_simu = [t]
+
     cov_value = [initial_cov_value]
     cov_timestamps = [initial_cov_value]
     aux = 0
     flag = t < max_time
 
     while flag:
+        
         upper_intensity = m_max + aux*(aux>=0)
         t_after = t + np.random.exponential(1 / upper_intensity)
         
@@ -53,26 +57,37 @@ def simulate_time(a,b,m_max,scheme_eds, baseline, t0=0, arg_mu ={}, arg_cov={}, 
 
 
 
-mu_t = lambda x :  (np.array([0,0])-x)*0.05
-scheme_eds  = lambda  t, delta_t, cov :cov + mu_t(cov)*delta_t + 0.05*np.random.normal(0, scale=np.sqrt(delta_t), size=2)
-a,b = 0.6,1
-arg_mu={'m1': 1, 'm2':0.2}
-pc = np.array([0.1,0.1])
-kernel = lambda z,m1,m2 : (m1-m2)*np.exp( -np.linalg.norm(z-pc)*10) + m2 
 
+scheme_eds  = lambda  t, delta_t, cov :cov + -cov*0.05*delta_t + 0.05*np.random.normal(0, scale=np.sqrt(delta_t), size=2) #+ mu_t(cov)*delta_t + 0.05*np.random.normal(0, scale=np.sqrt(delta_t), size=2)
+
+pc = np.array([0.1,0.1])
+
+
+def kernel(z,m1,m2):
+    return((m1-m2)*np.exp( -np.linalg.norm(z-pc)*10) + m2 )
+#kernel = lambda z,mu : abs(z)*mu
 
 def testsimu(a,b, mu1, mu2):
-    aaa =simulate_time(a,b, 20, scheme_eds = scheme_eds, baseline = kernel, arg_mu={'m1': mu1, 'm2':mu2},initial_cov_value = [0.0,0.0], max_time = 3000)
-    return(aaa)
+    simu_output =simulate_time(a,b, 20, scheme_eds = scheme_eds, baseline = kernel, arg_mu={'mu1':mu1, 'mu2':mu2},initial_cov_value = [0,0], max_time = 3000)
+    return(simu_output)
+
 """
 
 
 using Distributions
 using Plots
 
+py"scheme_eds"(0.0,0.1,[0.0,0.0])
 
-g₂(x)=1-exp(-norm(x-[0.02,0.02])*10) 
-g₁(x)= exp(-norm(x-[0.02,0.02])*10)
+
+##################################################
+############# Simulation avec julia ##############
+##################################################
+
+
+g(x)=abs(x)
+g₁(x)=1-exp(-norm(x-[0.1,0.1])*10) 
+g₂(x)= exp(-norm(x-[0.1,0.1])*10)
 coeff = [g₁; g₂]
 gₘ = LinearFamilyBaseline(coeff)
 
@@ -81,35 +96,70 @@ gₘ = LinearFamilyBaseline(coeff)
 drift(x)= 0.05
 diffusion(x)=-0.05.*x
 
-model = HawkesStochasticBaseline(0.6, 1.0, [0.2,1];Mmax= 50, gₘ = gₘ, drift = drift, diffusion = diffusion, X₀=[0.0,0.0] )
+model = HawkesStochasticBaseline(0.6, 1.0, [1.0,1.0];Mmax= 20, gₘ = gₘ,drift=drift , diffusion = diffusion, X₀=[0.0, 0.0])
 
 
-start = time()
 dfJl = rand(model, 3000.0)
-time()- start
 
+nrep = 300
+paramSimul = zeros(nrep, 4)
 
-size(dfJl)
-
-dfJl[dfJl.timestamps,:]
-
-zJl = [dfJl.cov'...;]
-
-
-plot(zJl[:,1], zJl[:,2])
-
-start = time()
 PyData =py"testsimu"(0.6,1, 1,0.2)
-time()- start
 
-dfPy = DataFrame(:time => PyData[2], :cov => [PyData[3][i,:] for i in 1:size(PyData[3],1)])
-f(x) = in(x, PyData[1])
-dfPy[!, :timestamps] = f.(dfPy.time)
+for k in 1:nrep
+    start = time()
+    dfJl = rand(model, 3000.0)
+    time()- start
+    
+    
+    paramSimul[k,1] = size(dfJl,1) ## nombre de point simulé 
+    
+    paramSimul[k,2] = size(dfJl[dfJl.timestamps,:],1) ## nombre de saut 
+    
+    #zJl = [dfJl.cov'...;]  ### matrice de covariavle
+    
+    
+    start = time()
+    PyData =py"testsimu"(0.6,1, 1,0.2)
+    time()- start
+    
+    dfPy = DataFrame(:time => PyData[2], :cov => [PyData[3][i,:] for i in 1:size(PyData[3],1)])
+    f(x) = in(x, PyData[1])
+    dfPy[!, :timestamps] = f.(dfPy.time)
+    
+    paramSimul[k,3] =size(dfPy,1) ## nombre de point simulé 
+    paramSimul[k,4] =  size(dfPy[dfPy.timestamps,:],1) ## nombre de saut 
+    #zPy = [dfPy.cov'...;] ### matrice de covariavle
+    
 
-size(dfPy)
+    start = time()
+    dfJl = rand(model, 3000.0)
+    time()- start
 
-dfPy[dfPy.timestamps,:]
 
-zPy = [dfPy.cov'...;]
+    paramSimul[k,1] = size(dfJl,1) ## nombre de point simulé 
 
-plot(zPy[:,1], zPy[:,2])
+    paramSimul[k,2] = size(dfJl[dfJl.timestamps,:],1) ## nombre de saut 
+
+    #zJl = [dfJl.cov'...;]  ### matrice de covariavle
+
+
+    start = time()
+    PyData =py"testsimu"(0.6,1, 1)
+    time()- start
+
+    dfPy = DataFrame(:time => PyData[2], :cov => [PyData[3][i,:] for i in 1:size(PyData[3],1)])
+    f(x) = in(x, PyData[1])
+    dfPy[!, :timestamps] = f.(dfPy.time)
+
+    paramSimul[k,3] =size(dfPy,1) ## nombre de point simulé 
+    paramSimul[k,4] =  size(dfPy[dfPy.timestamps,:],1) ## nombre de saut 
+    #zPy = [dfPy.cov'...;] ### matrice de covariavle
+
+end
+
+
+using CairoMakie
+boxplot(x=paramSimul[:,3], y =1.0)
+boxplot(Any[paramSimul[:,2], paramSimul[:,4]], fillcolor=[:red :black], fillalpha=0.2)
+

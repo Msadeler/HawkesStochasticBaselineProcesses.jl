@@ -27,3 +27,12 @@ diffusion(x)=-0.05.*x
 ### Definition and simulation of the model
 model = HawkesStochasticBaseline(0.6, 1.0, [1 ,0.2];Mmax= 10, gₘ = gₘ, drift = drift, diffusion = diffusion, X₀=[0.0,0.0] )
 df = rand(model,2000.0)
+
+
+x  = ( time = [1.0, 1.0, 2.0], cov = [2.0, 0.0, 1.0])
+x = (time = x.time[1:end-1], cov = x.cov[1:end-1])
+
+push!(x.time, 200 )
+push!(x.cov, 30)
+
+x

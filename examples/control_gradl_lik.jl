@@ -25,8 +25,11 @@ df = rand(model, 2000)
 ######## différences finies ####
 ################################
 
+θ = [0.6 , 1.0, 1.0, 1.0]
+
+
 ϵ = 0.01
 δϵ = zeros(4)
-δϵ[2] = ϵ
-θ = [0.6 , 1.0, 1.0, 1.0]
+δϵ[4] = ϵ
+
 likelihood(model,θ+δϵ, df)-likelihood(model,θ, df)- dot(gradient(model, θ,  df ), δϵ)
