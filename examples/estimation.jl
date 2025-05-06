@@ -12,6 +12,7 @@ g₂(x)= exp(-norm(x-[0.1,0.1])*10)
 coeff = [g₁; g₂]
 gₘ = LinearFamilyBaseline(coeff)
 
+
 ### Xₜ is a 2-dimensionnal Ornstein–Uhlenbeck process : dXₜ = -b(a-Xₜ)dt + σdWₜ 
 
 drift(x)= 0.05

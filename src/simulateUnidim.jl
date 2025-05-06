@@ -6,7 +6,7 @@ abstract type UniDimCov end
 
 
 
-const symboltypesimu = Dict(
+const symboltypecov = Dict(
     :MDC=> MultiDimCov,
     :UDC => UniDimCov
 )
@@ -17,7 +17,7 @@ function rand(hsb::HawkesStochasticBaseline, condition::Union{Int, Float64})
 end
 
 function rand(hsb::HawkesStochasticBaseline, condition::Union{Int, Float64}, type::Symbol)
-    rand(hsb, condition, symboltypesimu[type])
+    rand(hsb, condition, symboltypecov[type])
 end
 
 
@@ -39,10 +39,8 @@ function rand(hsb::HawkesStochasticBaseline,maxTime::Float64, ::Type{UniDimCov})
         
         upper_intensity = hsb.Mmax + aux*(aux>=0)
         t_after = t + rand(Exponential(1/upper_intensity))
-        
 
-        cov_val = result.cov[end] .+ hsb.diffusion(result.cov[end])  .* (t_after-t) .+ hsb.drift(result.cov[end]) .* rand(Normal(0, sqrt(t_after-t)))
-        print(cov_val)
+        cov_val = cov_val .+ hsb.diffusion(cov_val,t)  .* (t_after-t) .+ hsb.drift(cov_val,t) .* rand(Normal(0, sqrt(t_after-t)))
         gₘXₜ = hsb.gₘ(cov_val, hsb.m)
 
 
@@ -70,10 +68,11 @@ function rand(hsb::HawkesStochasticBaseline,maxTime::Float64, ::Type{UniDimCov})
 
 
     result = (time= result.time[1:end-1], timestamps = result.timestamps[1:end-1], cov = result.cov[1:end-1] )
-    
+
+    push!(result.cov, result.cov[end] .+ hsb.diffusion(result.cov[end],t)  .* (maxTime-result.time[end]) .+ hsb.drift(result.cov[end],t) .* rand(Normal(0, sqrt(maxTime-result.time[end]))))
     push!(result.time, maxTime)
     push!(result.timestamps, false)
-    push!(result.cov, hsb.X₀)
+
     df = DataFrame(:time => result.time, :timestamps => result.timestamps, :cov => result.cov)
     data!(hsb, df)
 
@@ -101,7 +100,7 @@ function rand(hsb::HawkesStochasticBaseline,nJump::Int,::Type{UniDimCov})::DataF
         upper_intensity = hsb.Mmax + aux*(aux>=0)
         t_after = t + rand(Exponential(1 / upper_intensity))
     
-        cov_val = cov_val .+ hsb.diffusion(cov_val)  .* (t_after-t) .+ hsb.drift(cov_val) .* rand(Normal(0, sqrt(t_after-t)))
+        cov_val = cov_val .+ hsb.diffusion(cov_val,t)  .* (t_after-t) .+ hsb.drift(cov_val,t) .* rand(Normal(0, sqrt(t_after-t)))
 
         gₘXₜ = hsb.gₘ(cov_val, hsb.m)
         candidate_intensity = gₘXₜ + aux*exp(-hsb.b*(t_after - last_timestamp))
@@ -148,7 +147,7 @@ function rand(hsb::HawkesStochasticBaseline,maxTime::Float64, ::Type{MultiDimCov
         t_after = t + rand(Exponential(1 / upper_intensity))
         
 
-        cov_val = cov_val .+ hsb.diffusion(cov_val)  .* (t_after-t) .+ hsb.drift(cov_val) .* rand(Normal(0, sqrt(t_after-t)), length(hsb.m))
+        cov_val = cov_val .+ hsb.diffusion(cov_val,t)  .* (t_after-t) .+ hsb.drift(cov_val,t) .* rand(Normal(0, sqrt(t_after-t)), size(hsb.X₀))
 
         gₘXₜ = hsb.gₘ(cov_val, hsb.m)
         candidate_intensity = gₘXₜ + aux*exp(-hsb.b*(t_after - last_timestamp))
@@ -176,10 +175,11 @@ function rand(hsb::HawkesStochasticBaseline,maxTime::Float64, ::Type{MultiDimCov
 
     
     result = (time= result.time[1:end-1], timestamps = result.timestamps[1:end-1], cov = result.cov[1:end-1] )
-    #result= [result;DataFrame(:time => Float64(maxTime), :timestamps=> Bool(false), :cov => Vector[hsb.X₀])]
+    
+    push!(result.cov, result.cov[end] .+ hsb.diffusion(result.cov[end],t)  .* (maxTime-result.time[end]) .+ hsb.drift(result.cov[end],t) .* rand(Normal(0, sqrt(maxTime-result.time[end]))))
     push!(result.time, maxTime)
     push!(result.timestamps, false)
-    push!(result.cov, hsb.X₀)
+    
     df = DataFrame(:time => result.time, :timestamps => result.timestamps, :cov => result.cov)
     data!(hsb, df)
 
@@ -206,7 +206,7 @@ function rand(hsb::HawkesStochasticBaseline,nJump::Int,::Type{MultiDimCov})::Dat
         upper_intensity = hsb.Mmax + aux*(aux>=0)
         t_after = t + rand(Exponential(1 / upper_intensity))
     
-        cov_val = cov_val .+ hsb.diffusion(cov_val)  .* (t_after-t) .+ hsb.drift(cov_val) .* rand(Normal(0, sqrt(t_after-t)),length(hsb.m))
+        cov_val = cov_val .+ hsb.diffusion(cov_val,t)  .* (t_after-t) .+ hsb.drift(cov_val,t) .* rand(Normal(0, sqrt(t_after-t)),length(hsb.X₀))
 
         gₘXₜ = hsb.gₘ(cov_val, hsb.m)
         candidate_intensity = gₘXₜ + aux*exp(-hsb.b*(t_after - last_timestamp))
