@@ -2,10 +2,11 @@
 abstract type TrajectoryPlot end
 abstract type IntensityPlot end
 abstract type IntensityProcessPlot end
-
+abstract type TrajectoryPlotProjected end
 
 const symbol2typeplot = Dict(
     :T => TrajectoryPlot,
+    :TP => TrajectoryPlotProjected,
     :I => IntensityPlot,
     :IP => IntensityProcessPlot
 )
@@ -22,17 +23,13 @@ function plot(hsb::HawkesStochasticBaseline,type::Symbol=:T; options...)
     end
 end
 
-function plot(hsb::HawkesStochasticBaseline, ::Type{TrajectoryPlot},::Type{UniDimCov}, bin_cov =0.1, bin_time=0.1)
-
-    maxCov, minCov = maximum(hsb.timedata.cov)+bin_cov, minimum(hsb.timedata.cov)-bin_cov
-    db = range(minCov, step = bin_cov, length=trunc(Int, (maxCov-minCov)/bin_cov)+1)
-    baselineHeatMap =  reshape( repeat(hsb.gₘ.(db, hsb.m), size(hsb.timedata.time,1)),:, size(hsb.timedata.time,1))
+function plot(hsb::HawkesStochasticBaseline, ::Type{TrajectoryPlot},::Type{UniDimCov}; bin_cov::Float64=0.1, bin_time::Float64=0.1)
 
 
     maxCov, minCov = maximum(hsb.timedata.cov)+bin_cov, minimum(hsb.timedata.cov)-bin_cov
-    xgrid = range(minCov, step = bin_cov, length=trunc(Int, (maxCov-minCov)/bin_cov)+1)
+    xgrid = minCov-bin_cov:bin_cov: maxCov+bin_cov
     tgrid = hsb.timedata.time[1]:bin_time:hsb.timedata.time[end]
-    baselineHeatMap =  transpose(reshape( repeat(hsb.gₘ.(db, hsb.m), length(tgrid)),:, length(tgrid)))
+    baselineHeatMap =  transpose(reshape( repeat(hsb.gₘ.(xgrid, hsb.m), length(tgrid)),:, length(tgrid)))
     
     
     f = Figure()
@@ -87,7 +84,7 @@ function plot(hsb::HawkesStochasticBaseline,::Type{IntensityProcessPlot})
 end
 
 
-function plot(model::HawkesStochasticBaseline,  ::Type{TrajectoryPlot}, ::Type{MultiDimCov};dim_1::Int64=1, dim_2::Int64=2,    bin_cov = 0.001)
+function plot(model::HawkesStochasticBaseline,  ::Type{TrajectoryPlot}, ::Type{MultiDimCov};dim_1::Int64=1, dim_2::Int64=2, bin_cov::Float64 = 0.001)
 
     Xₜ= [model.timedata.cov'...;]
     Xₜₖ = [model.timedata[model.timedata.timestamps, :cov]'...;]
@@ -101,10 +98,11 @@ function plot(model::HawkesStochasticBaseline,  ::Type{TrajectoryPlot}, ::Type{M
 
     f = Figure()
 
-    ax, hm = heatmap(f[1,1][1,1],xgrid, ygrid,gₘX, colormap = :deep)
+    ax, hm = heatmap(f[1,1][1,1],xgrid, ygrid,gₘX, colormap =:deep)
     Colorbar(f[1,1][1,2], hm)  
     lines!(Xₜ[:,dim_1], Xₜ[:,dim_2], color=(:black, 0.7),linewidth=0.8)
-    scatter!(Xₜₖ[:,dim_1], Xₜₖ[:,dim_2], color=(:orange, 1),markersize=4)
+    #scatter!(Xₜₖ[:,dim_1], Xₜₖ[:,dim_2], color=(:orange, 1),markersize=4)
 
     f
 end
+
