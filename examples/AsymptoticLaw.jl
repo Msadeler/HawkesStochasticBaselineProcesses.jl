@@ -12,8 +12,8 @@ g₂(x)= exp(-norm(x-[0.1,0.1])*10)
 coeff = [g₁; g₂]
 gₘ = LinearFamilyBaseline(coeff)
 
-drift(x)= 0.05
-diffusion(x)=-0.05.*x
+drift(x,t)= 0.05
+diffusion(x,t)=-0.05.*x
 
 model = HawkesStochasticBaseline(0.6, 1.0, [0.2,1];Mmax= 20, gₘ = gₘ, drift = drift, diffusion = diffusion, X₀=[0.0,0.0] )
 

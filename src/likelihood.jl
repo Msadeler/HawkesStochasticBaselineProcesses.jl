@@ -91,7 +91,7 @@ function gradient(model::HawkesStochasticBaseline, θ::Vector, df::DataFrame)
         ∇Λ[2]+= 1/model.b *∇λTₖ[2]*(1- δt)- aux/model.b^2 *(1 - δt*( model.b*(jump.time - Tₖ₋₁) +1))
         
         ### Update of ∇λ(Tᵢ₊₁)
-        ∇λTₖ = [ δt *(∇λTₖ[1]+1); δt *( -(jump.time - Tₖ₋₁)*aux + ∇λTₖ[2] );gᵢXₜₖ[i+1,:] ]    
+        ∇λTₖ = [ δt *(∇λTₖ[1]+1); δt *( -(jump.time - Tₖ₋₁)*aux + ∇λTₖ[2] ); gᵢXₜₖ[i+1,:] ]    
         ### Update of λ(Tᵢ₊₁)
         λTₖ = jump.gₘXₜ + δt*aux
     
