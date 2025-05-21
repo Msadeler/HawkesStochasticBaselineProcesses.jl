@@ -33,20 +33,17 @@ if isnothing(model.∫gᵢX)
 end  
 
 
-nrep =300
-θhat = zeros(nrep,nbparams(model))
-estimator = zeros(nrep, nbparams(model))
-∇lhat = zeros(nrep,nbparams(model))  
-
 
 function hessian(model::HawkesStochasticBaseline, df::DataFrame)
-        
-    timeJump = df[df.timestamps, :]
-    gᵢXₜₖ=  model.gᵢX[df.timestamps,:]
+    
+    data = copy(df)
+    timeJump = data[data.timestamps, :]
+    timeJump[:,:gₘXₜ] = [model.gₘ(x, model.m)  for x in timeJump.cov]
+
+    gᵢXₜₖ=  model.gᵢX[data.timestamps,:]
 
 
     n = nbparams(model)
-    nₘ = n-2
 
 
     ∇²l = zeros(n,n)
@@ -55,7 +52,7 @@ function hessian(model::HawkesStochasticBaseline, df::DataFrame)
 
     ∇Λ = [0;0;zeros(length(model.m))]
     ∇λTₖ = [0;0;gᵢXₜₖ[1,:] ]
-    λTₖ = model.gₘ( model.timedata[model.timedata.timestamps,:cov][1], model.m)
+    λTₖ = timeJump.gₘXₜ[1]
 
 
     ∇²l  = (∇²λTₖ - ∇λTₖ*∇λTₖ')/λTₖ^2 - ∇²Λ
@@ -93,7 +90,7 @@ function hessian(model::HawkesStochasticBaseline, df::DataFrame)
         aux = model.a + aux*δt
     end
 
-    jump = df[end,:]
+    jump = data[end,:]
 
     δt = jump.time - Tₖ₋₁
 
@@ -107,24 +104,36 @@ function hessian(model::HawkesStochasticBaseline, df::DataFrame)
 
 end
 
+nrep =200
+θhat = zeros(nrep,nbparams(model))
+estimator = zeros(nrep, nbparams(model))
+∇lhat = zeros(nrep,nbparams(model))  
+
+
+
+T = 10000.0
 
 
 for k in 1:nrep
 
-    df = rand(model, 10000.0)
+    df = rand(model, T)
 
     modelBGFS  = HawkesStochasticBaseline(0.0,1, [1.0,1.0], gₘ=gₘ)
     mle(modelBGFS; data=df)
     θhat[k,:] = params(modelBGFS)
 
-    ∇lhat[k,:] = diag( sqrt(inv(-1/8000.0*hessian(modelBGFS, df)) ))
+    ∇lhat[k,:] = diag(sqrt(inv(-hessian(modelBGFS, df)/T)))
 
-    estimator[k,:] = sqrt(8000.0)*(θhat[k,:]- θ)./∇lhat[k,:]
+    estimator[k,:] = sqrt(T)*(θhat[k,:]- θ)./∇lhat[k,:]
 
    
 end
 
 
-histogram(estimator[:,3])
+histogram(estimator[:,4])
 
 std(eachrow(estimator))
+
+std(eachrow(θhat))
+
+mean(eachrow(∇lhat))

@@ -22,12 +22,12 @@ end
 
 function drift(x,t)
     z =t/100%1
-    return(0.05+40*(z-0.5)^2)
+    return(0.05+10*(z-0.5)^2)
 end
 
 
 hsb = HawkesStochasticBaseline(0.3, 1.0, 0.5;Mmax= 200, gₘ = gₘ, drift = drift, diffusion = diffusion, X₀=0.0 )
-df = rand(hsb, 200.0)
+df = rand(hsb, 500.0)
 HawkesStochasticBaselineProcesses.plot(hsb, :T)
 
 ####################################################

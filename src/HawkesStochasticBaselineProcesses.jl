@@ -22,10 +22,10 @@ export plot
 export likelihood, gradient
 export mle
 export nbparams,params, params!, data!, gᵢX!,∫gᵢX! 
-export UnivariatePolynomialFamilyBaseline, LinearFamilyBaseline,gradient,hessian,baseline, AbstractFamilyBaseline
+export UnivariatePolynomialFamilyBaseline, LinearFamilyBaseline,hessian,baseline, AbstractFamilyBaseline
+export fisher
 
-
-export HawkesStochasticBaseline
+export HawkesStochasticBaseline, MultidimHawkesStochasticBaseline
 
 include("family.jl")
 include("model.jl")
@@ -33,6 +33,8 @@ include("simulateUnidim.jl")
 include("plots.jl")
 include("likelihood.jl")
 include("mle.jl")
+include("fisherMatrix.jl")
+include("test.jl")
 
 
 
