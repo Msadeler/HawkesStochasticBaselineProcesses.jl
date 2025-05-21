@@ -11,4 +11,4 @@ gₘ = LinearFamilyBaseline([f])
 model  = HawkesStochasticBaseline(0.6, 1.0,1.0;gₘ = gₘ)
 outputPy = reduce(hcat,[[  0.08252534,  -0.06312538, 0.17110561], [-0.06312538,    0.04905937,-0.12813741], [0.17110561, -0.12813741,  0.56496415]])
 
-@test fisher(model, df)/5 ≈ outputPy atol= 10^(-4)
+@test fisher(model, df) ≈ outputPy atol= 10^(-4)

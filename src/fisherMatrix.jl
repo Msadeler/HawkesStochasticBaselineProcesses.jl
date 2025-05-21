@@ -16,7 +16,7 @@ function fisher(model::HawkesStochasticBaseline, data::DataFrame)
     timeJump = df[df.timestamps, :]
     timeJump[:,:gₘXₜ] = [model.gₘ(x, model.m)  for x in timeJump.cov]
 
-    gᵢXₜₖ=  model.gᵢX[data.timestamps,:]
+    gᵢXₜₖ=  model.gᵢX[df.timestamps,:]
     ∇λTₖ = [0.0 ;0.0;gᵢXₜₖ[1,:] ]
     λTₖ = model.gₘ( timeJump.cov[1], model.m)
 
@@ -44,7 +44,7 @@ function fisher(model::HawkesStochasticBaseline, data::DataFrame)
         
     end
 
-    return(Γ)
+    return(Γ/model.timedata.time[end])
     
     
 end

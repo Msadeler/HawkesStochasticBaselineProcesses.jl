@@ -16,7 +16,7 @@ gₘ = LinearFamilyBaseline(coeff)
 drift(x,t)= 0.05
 diffusion(x,t)=-0.05.*x
 
-model = HawkesStochasticBaseline(0.6, 1.0, [0.2,1];Mmax= 20, gₘ = gₘ, drift = drift, diffusion = diffusion, X₀=[0.0,0.0] )
+model = HawkesStochasticBaseline(0.6, 1.0, [1.0,1.0];Mmax= 20, gₘ = gₘ, drift = drift, diffusion = diffusion, X₀=[0.0,0.0] )
 df = rand(model,8000.0)
 
 
@@ -112,6 +112,23 @@ estimator = zeros(nrep, nbparams(model))
 
 
 T = 10000.0
+k=1
+df = rand(model, T)
+
+modelBGFS  = HawkesStochasticBaseline(0.0,1, [1.0,1.0], gₘ=gₘ)
+mle(modelBGFS; data=df)
+θhat[k,:] = params(modelBGFS)
+
+model.gᵢX
+
+df.timestamps
+
+fisher(model, df)
+
+∇lhat[k,:] = diag(sqrt(inv(fisher(model, df))))
+
+estimator[k,:] = sqrt(T)*(θhat[k,:]- θ)./∇lhat[k,:]
+
 
 
 for k in 1:nrep
@@ -122,7 +139,7 @@ for k in 1:nrep
     mle(modelBGFS; data=df)
     θhat[k,:] = params(modelBGFS)
 
-    ∇lhat[k,:] = diag(sqrt(inv(-hessian(modelBGFS, df)/T)))
+    ∇lhat[k,:] = diag(sqrt(inv(fisher(model, df))))
 
     estimator[k,:] = sqrt(T)*(θhat[k,:]- θ)./∇lhat[k,:]
 

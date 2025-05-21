@@ -8,8 +8,7 @@ using  Optim
 using Polynomials
 using LinearAlgebra
 using CairoMakie
-
-
+using Statistics
 import Base.rand
 
 
@@ -24,7 +23,7 @@ export mle
 export nbparams,params, params!, data!, gᵢX!,∫gᵢX! 
 export UnivariatePolynomialFamilyBaseline, LinearFamilyBaseline,hessian,baseline, AbstractFamilyBaseline
 export fisher
-
+export  OneSampleTTest, EqualCoeffTest
 export HawkesStochasticBaseline, MultidimHawkesStochasticBaseline
 
 include("family.jl")
