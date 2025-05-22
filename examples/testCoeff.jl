@@ -22,42 +22,6 @@ T = 5000.0
 df = rand(model, T)
 
 
-Test1 = zeros(500)
-Test2 = zeros(500)
-
-for k in 1:200
-
-
-    df = rand(model, T)
-
-
-    ### Estimation
-    modelEstim  = HawkesStochasticBaseline(0.0,1, [1.0,1.0], gₘ=gₘ)
-    mle(modelEstim; data=df)
-
-
-    test1 = OneSampleTTest(modelEstim, 1, 4)
-    Test1[k] = test1["Statistics"]
-
-
-    test2 = EqualCoeffTest(modelEstim, 3,4)
-    Test2[k] = test2["Statistics"]
-
-
-
-end
-
-hist(Test1[1:200])
-
-mean(Test2[1:200])
-std(Test2[1:200])
-
-
-aaaa =abs.(Test1[1:200])
-
-pval = [2*(1-cdf.(Normal(0,1),x)) for x in abs.(Test1[1:200])]
-hist(pval)
-
 
 
 ### Estimation

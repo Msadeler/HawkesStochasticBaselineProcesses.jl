@@ -25,6 +25,8 @@ export UnivariatePolynomialFamilyBaseline, LinearFamilyBaseline,hessian,baseline
 export fisher
 export  OneSampleTTest, EqualCoeffTest
 export HawkesStochasticBaseline, MultidimHawkesStochasticBaseline
+export compensator
+
 
 include("family.jl")
 include("model.jl")
@@ -34,7 +36,7 @@ include("likelihood.jl")
 include("mle.jl")
 include("fisherMatrix.jl")
 include("test.jl")
-
+include("compensator.jl")
 
 
 end
