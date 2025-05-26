@@ -10,23 +10,25 @@ using LinearAlgebra
 using CairoMakie
 using Statistics
 import Base.rand
-
+using HypothesisTests
 
 
 const Parameters = Vector{Float64}
+const BaselineParameters = Vector{Vector{Float64}}
 
 
 
 export plot
 export likelihood, gradient
 export mle
-export nbparams,params, params!, data!, gᵢX!,∫gᵢX! 
+export nbparams,params, params!, data!, gᵢX!,∫gᵢX! , nbdim
 export UnivariatePolynomialFamilyBaseline, LinearFamilyBaseline,hessian,baseline, AbstractFamilyBaseline
 export fisher
 export  OneSampleTTest, EqualCoeffTest
-export HawkesStochasticBaseline, MultidimHawkesStochasticBaseline
+export HawkesStochasticBaseline
 export compensator
-
+export procedureGOF, UniTest, ExpTest
+export Baseline
 
 include("family.jl")
 include("model.jl")
@@ -37,6 +39,6 @@ include("mle.jl")
 include("fisherMatrix.jl")
 include("test.jl")
 include("compensator.jl")
-
+include("GOF.jl")
 
 end

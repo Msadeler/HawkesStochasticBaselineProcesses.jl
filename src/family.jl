@@ -1,5 +1,6 @@
 abstract type AbstractFamilyBaseline  end
 
+
 struct UnivariatePolynomialFamilyBaseline <:AbstractFamilyBaseline
     coeff::Vector{Function}
 end
@@ -16,11 +17,14 @@ function gradient(gₘ::UnivariatePolynomialFamilyBaseline,x::Float64,μ::Float6
     derivative(Polynomial(gₘ.coeff(x), :m))(m)
 end
 
+
+
 struct LinearFamilyBaseline <:AbstractFamilyBaseline
-    coeff::Vector{Function}
+    coeff::Union{Matrix{<:Function}, Vector{<:Function}, Vector{<:Vector{<:Function}}}
 end
 
-(gₘ::LinearFamilyBaseline)(x::Union{Real,Vector},m::Union{Real,Vector}) = dot([gᵢ(x) for gᵢ in gₘ.coeff],m) 
+
+(gₘ::LinearFamilyBaseline)(x::Union{Real,Vector},m::Union{Real,Vector,Matrix}) = dot([gᵢ(x) for gᵢ in gₘ.coeff],m) 
 
 function gradient(gₘ::LinearFamilyBaseline, x::Union{Real,Vector}, m::Union{Real,Vector})
     [fi(x) for fi in gₘ.coeff]   
@@ -29,3 +33,12 @@ end
 function hessian(gₘ::LinearFamilyBaseline, x::Union{Real,Vector}, m::Union{Real,Vector})
     zeros(length(m), length(m))   
 end
+
+
+
+struct Baseline 
+    coeff::Vector{Vector{AbstractFamilyBaseline}}
+end
+
+
+(g::Baseline)(x::Union{Real,Vector},m::BaselineParameters) = [f(x, m[i])  for i=eachindex(m) for f in g.coeff[i]]

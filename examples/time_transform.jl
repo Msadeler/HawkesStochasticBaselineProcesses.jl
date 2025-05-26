@@ -23,3 +23,4 @@ model = HawkesStochasticBaseline(0.6, 1.0, [0.2,1];Mmax= 20, gₘ = gₘ, drift 
 data= rand(model, 200)
 
 compensator(model)
+
