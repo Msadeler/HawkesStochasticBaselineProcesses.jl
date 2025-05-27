@@ -1,23 +1,20 @@
 using HawkesStochasticBaselineProcesses
+using Distributions
 using LinearAlgebra
+using DataFrames
 
-g₁(x)=1-exp(-norm(x-[0.1,0.1])*10) 
-g₂(x)= exp(-norm(x-[0.1,0.1])*10)
-coeff = [g₁; g₂]
-gₘ = LinearFamilyBaseline(coeff)
-
-
-g = Baseline([[gₘ]])
+g1, g2 =  LinearFamilyBaseline([x->abs(x)]),LinearFamilyBaseline([x->1])
+gₘ = Baseline([ [g1], [g2]])
 
 ### Xₜ is a 2-dimensionnal Ornstein–Uhlenbeck process : dXₜ = -b(a-Xₜ)dt + σdWₜ 
 
 drift(x,t)= 0.05
 diffusion(x,t)=-0.05.*x
 
-model = HawkesStochasticBaseline(0.6, 1.0, [[0.2,1.0]];Mmax= 20, gₘ = g, drift = drift, diffusion = diffusion, X₀=[0.0,0.0] )
 
-g([0.0, 0.0], [[0.2,1]])
+a =[0.6 0.6; 0.6  0.6]
+b =[2.0; 2.0]
+m = [[1.0],[1.0]]
+hsb = HawkesStochasticBaseline(a,b,m;Mmax= [1.0, 1.0], gₘ = gₘ, drift = drift, diffusion = diffusion, X₀=0.0 )
 
-df = rand(model, 200.0)
-
-model.m
+rand(hsb,20.0)

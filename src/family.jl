@@ -24,7 +24,7 @@ struct LinearFamilyBaseline <:AbstractFamilyBaseline
 end
 
 
-(gₘ::LinearFamilyBaseline)(x::Union{Real,Vector},m::SubBaselineParameters) = dot([gᵢ(x) for gᵢ in gₘ.coeff],m) 
+(gₘ::LinearFamilyBaseline)(x::Union{<:Real,Vector},m::SubBaselineParameters) = dot([gᵢ(x) for gᵢ in gₘ.coeff],m) 
 
 function gradient(gₘ::LinearFamilyBaseline, x::Union{Real,Vector}, m::SubBaselineParameters)
     [fi(x) for fi in gₘ.coeff]   

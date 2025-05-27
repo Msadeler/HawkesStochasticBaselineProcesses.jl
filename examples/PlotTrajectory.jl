@@ -7,13 +7,9 @@ using LinearAlgebra
 ####################################################
 
 
-g₁(x)=1
-g₂(x)= abs(x)/200
-coeff = [ g₂]
-gₘ = LinearFamilyBaseline(coeff)
+gₘ = Baseline([[LinearFamilyBaseline([x->abs(x)/200])],[LinearFamilyBaseline([x-> 2-2*abs(x)/(abs(x)+1) ])]])
 
 ### dXₜ = -b(a-Xₜ)dt + σdWₜ 
-
 
 function diffusion(x,t)
     z  = t/100%1
@@ -25,10 +21,26 @@ function drift(x,t)
     return(0.05+10*(z-0.5)^2)
 end
 
+a =[0.6 -1 ;-1  0.6]
+b =[2.0; 2.0]
+m = [[1.0],[1.0]]
 
-hsb = HawkesStochasticBaseline(0.3, 1.0, 0.5;Mmax= 200, gₘ = gₘ, drift = drift, diffusion = diffusion, X₀=0.0 )
+
+hsb = HawkesStochasticBaseline(a,b,m ;Mmax= 200.0, gₘ = gₘ, drift = drift, diffusion = diffusion, X₀=0.0 )
 df = rand(hsb, 500.0)
-HawkesStochasticBaselineProcesses.plot(hsb, :T)
+
+bin_cov=0.1
+bin_time = 0.1
+maxCov, minCov = maximum(hsb.timedata.cov)+bin_cov, minimum(hsb.timedata.cov)-bin_cov
+xgrid = minCov-bin_cov:bin_cov: maxCov+bin_cov
+tgrid = hsb.timedata.time[1]:bin_time:hsb.timedata.time[end]
+#baselineHeatMap =  transpose(reshape( repeat(hsb.gₘ(xgrid, hsb.m), length(tgrid)),:, length(tgrid)))
+
+f = Figure()
+ax = Axis(f[1, 1])
+lines!(ax,hsb.timedata.time, hsb.timedata.cov)
+scatter!(ax,hsb.timedata[hsb.timedata.timestamps.>=1,:time], hsb.timedata[hsb.timedata.timestamps.>=1,:cov], color = hsb.timedata[hsb.timedata.timestamps.>=1,:timestamps])
+f
 
 ####################################################
 #################### 2D Plot #######################
