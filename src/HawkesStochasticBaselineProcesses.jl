@@ -15,7 +15,7 @@ using HypothesisTests
 
 const Parameters = Vector{Float64}
 const BaselineParameters = Vector{Vector{Float64}}
-
+const SubBaselineParameters = Union{Float64,Vector{Float64}}
 
 
 export plot

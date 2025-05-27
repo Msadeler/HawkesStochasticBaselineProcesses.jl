@@ -3,29 +3,13 @@ using Distributions
 using LinearAlgebra
 using DataFrames
 
+g1, g2 =  LinearFamilyBaseline([x->1]),LinearFamilyBaseline([x->1])
+gₘ = Baseline([ [g1], [g2]])
 
-abstract type AbstractFamilyBaseline  end
+### Xₜ is a 2-dimensionnal Ornstein–Uhlenbeck process : dXₜ = -b(a-Xₜ)dt + σdWₜ 
 
-
-struct LinearFamilyBaseline <:AbstractFamilyBaseline
-    coeff::Vector{Function}
-end
-
-
-
-f(x)=1
-
-LinearFamilyBaseline([f])
-
-g = reshape([f,f,f,f], (2,2))
-LinearFamilyBaseline(g)
-
-
-g =[[f,f]; [f,f]]
-LinearFamilyBaseline(g)
-
-g =[[f,f], [f,f]]
-LinearFamilyBaseline(g)
+drift(x,t)= 0.05
+diffusion(x,t)=-0.05.*x
 
 
 ##############################################
@@ -36,18 +20,15 @@ LinearFamilyBaseline(g)
 ##############################################
 
 function testsimu(hsb::HawkesStochasticBaseline, max_time::Float64)
-    Mmax = 2
-    g(x) = [1;1]
-    
-    
+
     n = nbdim(hsb)
     
     result = (time=Float64[hsb.t₀],timestamps=Int64[0],cov=[hsb.X₀])    
     
     ## initialisation processus majorant
-    a̅ = a.*(a.>=0)
+    a̅ = hsb.a.*(hsb.a.>=0)
     Y̅ᵢⱼ = zeros(n, n)
-    λ𝐌 = Mmax
+    λ𝐌 = hsb.Mmax
     
     ### initialisation intensity et temps initial
     
@@ -65,7 +46,7 @@ function testsimu(hsb::HawkesStochasticBaseline, max_time::Float64)
     
         Xₜ = Xₖ₋₁ .+ hsb.diffusion(Xₖ₋₁,t).*(t-t⁻) .+ hsb.drift(Xₖ₋₁,t).*rand(Normal(0, sqrt(t-t⁻)))
         #gₘXₜ = hsb.gₘ(Xₜ, hsb.m)
-        gₘXₜ = g(Xₜ)
+        gₘXₜ = hsb.gₘ(Xₜ,hsb.m)
         Yᵢⱼ =  Yᵢⱼ.*exp.(-hsb.b.*(t - t⁻))
     
         
@@ -81,7 +62,7 @@ function testsimu(hsb::HawkesStochasticBaseline, max_time::Float64)
             Y̅ᵢⱼ[:,type_event] += a̅[:,type_event]
             Yᵢⱼ[:,type_event] += hsb.a[:,type_event]
     
-            λ𝐌 = Mmax .+ sum.(eachrow(Y̅ᵢⱼ))
+            λ𝐌 = hsb.Mmax .+ sum.(eachrow(Y̅ᵢⱼ))
         end
     
         push!(result.time, t)
@@ -105,45 +86,33 @@ end
 
 
 
-a = 0.6*ones(2,2)
-b = 2/0.6*a
+a =[0.6 0.6; 0.6  0.6]
+b =[2.0; 2.0]
+m = [[1.0],[1.0]]
+hsb = HawkesStochasticBaseline(a,b,m;Mmax= [1.0, 1.0], gₘ = gₘ, drift = drift, diffusion = diffusion, X₀=0.0 )
 
-hsb = HawkesStochasticBaseline(a,b; Mmax=[1.0,1.0])
-
-nb=0
-
-for k in 1:1000
-
-    df =testsimu(hsb,2000.0)
-    nb += sum(df.timestamps.>=1)
-
+nb= 0
+df = 0
+for k in 1:10
+    df = testsimu(hsb, 200.0)
+    nb +=sum(df.timestamps.>=1)
 end
 
-
-
 nb/1000
-
-g(x) = [1;1]
-    
-
-
-
-########## Début fonction
-
-
+############
 n = nbdim(hsb)
     
+
 result = (time=Float64[hsb.t₀],timestamps=Int64[0],cov=[hsb.X₀])    
     
 ## initialisation processus majorant
-a̅ = a.*(a.>=0)
+a̅ = hsb.a.*(hsb.a.>=0)
 Y̅ᵢⱼ = zeros(n, n)
-λ𝐌 = Mmax
+λ𝐌 = hsb.Mmax
 
 ### initialisation intensity et temps initial
 
 Yᵢⱼ = zeros(n, n)
-
 Xₖ₋₁ = hsb.X₀
 
 
@@ -168,7 +137,7 @@ t = t⁻ + rand(Exponential(1/sum(λ𝐌)))
 
 Xₜ = Xₖ₋₁ .+ hsb.diffusion(Xₖ₋₁,t).*(t-t⁻) .+ hsb.drift(Xₖ₋₁,t).*rand(Normal(0, sqrt(t-t⁻)))
 #gₘXₜ = hsb.gₘ(Xₜ, hsb.m)
-gₘXₜ = g(Xₜ)
+gₘXₜ = g(Xₜ,hsb.m)
 Yᵢⱼ =  Yᵢⱼ.*exp.(-hsb.b.*(t - t⁻))
 
 

@@ -26,4 +26,3 @@ b =  [[1, 1 ] , [2, 2]]
 
 hsb = MultidimHawkesStochasticBaseline(a, b, 0.5;Mmax= 200, gₘ = gₘ, drift = drift, diffusion = diffusion, X₀=0.0 )
 df = rand(hsb, 500.0)
-Ha

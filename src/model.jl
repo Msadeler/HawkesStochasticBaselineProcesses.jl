@@ -6,7 +6,7 @@ mutable struct HawkesStochasticBaseline <: HawkesProcess
     a::Union{Float64,Vector,Matrix}
     b::Union{Float64,Vector,Matrix}
     m::BaselineParameters
-    Mmax::Float64   
+    Mmax::Union{Float64,Vector}   
     #gₘ::Union{<:AbstractFamilyBaseline,<:Function}
     gₘ::Baseline
     drift::Function
@@ -18,7 +18,7 @@ mutable struct HawkesStochasticBaseline <: HawkesProcess
     ∫gᵢX::Union{Nothing, Vector}
 end
 
-HawkesStochasticBaseline(a::Union{Float64,Vector,Matrix}, b::Union{Float64,Vector,Matrix}, m::Union{Float64,Vector,Matrix}=1.0 ; Mmax::Real=1e15, gₘ::Baseline=Baseline([[LinearFamilyBaseline([x -> 1])]]), drift::Function = (x,t)->0.0, diffusion::Function=(x,t)->0.0, t₀::Real=0.0, X₀::Union{Real,Vector}=0.0,timedata::Nothing=nothing, gᵢX::Union{Nothing,Matrix}=nothing,∫gᵢX::Union{Nothing, Vector}=nothing) = HawkesStochasticBaseline(a,b, m , Mmax,gₘ, drift, diffusion, t₀,X₀,timedata,gᵢX,∫gᵢX)   
+HawkesStochasticBaseline(a::Union{Float64,Vector,Matrix}, b::Union{Float64,Vector,Matrix}, m::Union{Float64,Vector,Matrix}=1.0 ; Mmax::Union{Float64,Vector}   =1e15, gₘ::Baseline=Baseline([[LinearFamilyBaseline([x -> 1])]]), drift::Function = (x,t)->0.0, diffusion::Function=(x,t)->0.0, t₀::Real=0.0, X₀::Union{Real,Vector}=0.0,timedata::Nothing=nothing, gᵢX::Union{Nothing,Matrix}=nothing,∫gᵢX::Union{Nothing, Vector}=nothing) = HawkesStochasticBaseline(a,b, m , Mmax,gₘ, drift, diffusion, t₀,X₀,timedata,gᵢX,∫gᵢX)   
 
 
 nbdim(model::HawkesStochasticBaseline)::Int = size(model.a,1)

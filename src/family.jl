@@ -24,13 +24,13 @@ struct LinearFamilyBaseline <:AbstractFamilyBaseline
 end
 
 
-(gₘ::LinearFamilyBaseline)(x::Union{Real,Vector},m::Union{Real,Vector,Matrix}) = dot([gᵢ(x) for gᵢ in gₘ.coeff],m) 
+(gₘ::LinearFamilyBaseline)(x::Union{Real,Vector},m::SubBaselineParameters) = dot([gᵢ(x) for gᵢ in gₘ.coeff],m) 
 
-function gradient(gₘ::LinearFamilyBaseline, x::Union{Real,Vector}, m::Union{Real,Vector})
+function gradient(gₘ::LinearFamilyBaseline, x::Union{Real,Vector}, m::SubBaselineParameters)
     [fi(x) for fi in gₘ.coeff]   
 end
 
-function hessian(gₘ::LinearFamilyBaseline, x::Union{Real,Vector}, m::Union{Real,Vector})
+function hessian(gₘ::LinearFamilyBaseline, x::Union{Real,Vector}, m::SubBaselineParameters)
     zeros(length(m), length(m))   
 end
 
@@ -41,4 +41,4 @@ struct Baseline
 end
 
 
-(g::Baseline)(x::Union{Real,Vector},m::BaselineParameters) = [f(x, m[i])  for i=eachindex(m) for f in g.coeff[i]]
+(g::Baseline)(x::Union{<:Real,Vector},m::BaselineParameters) = [f(x, m[i])  for i=eachindex(m) for f in g.coeff[i]]
