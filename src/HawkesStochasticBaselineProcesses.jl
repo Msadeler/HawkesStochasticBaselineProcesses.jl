@@ -19,15 +19,18 @@ const SubBaselineParameters = Union{Float64,Vector{Float64}}
 
 abstract type MultiDimCov end
 abstract type UniDimCov end
-abstract type Multinomial end
-abstract type Uninomial end
-
+abstract type MultinomialProcess end
+abstract type UninomialProcess end
 
 const symboltypecov = Dict(
     :MDC=> MultiDimCov,
     :UDC => UniDimCov
 )
 
+const symboltypeprocess = Dict(
+    :MP=> MultinomialProcess,
+    :UP => UninomialProcess
+)
 
 
 
@@ -42,10 +45,11 @@ export HawkesStochasticBaseline
 export compensator
 export procedureGOF, UniTest, ExpTest
 export Baseline
+export  MultiDimCov,UniDimCov, MultinomialProcess,UninomialProcess
 
 include("family.jl")
 include("model.jl")
-include("simulateUnidim.jl")
+include("Simulate.jl")
 include("plots.jl")
 include("likelihood.jl")
 include("mle.jl")

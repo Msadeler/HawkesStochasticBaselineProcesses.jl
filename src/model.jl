@@ -33,10 +33,6 @@ function params!(model::HawkesStochasticBaseline, θ::Vector)
     model.b = θ[3:end]
 end 
 
-function params!(model::HawkesStochasticBaseline, θ::Vector) 
-    model.a, model.b =θ[1:2]
-    model.m = θ[3:end]
-end 
 	
 function data!(model::HawkesProcess, data::DataFrame)
     model.timedata = data

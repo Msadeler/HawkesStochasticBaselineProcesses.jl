@@ -14,17 +14,19 @@ const symbol2typeplot = Dict(
 
 
 function plot(hsb::HawkesStochasticBaseline,type::Symbol=:T; options...)
+    
+    dimProcess = nbdim(hsb) > 1 ? :MP : :UP
 
     if type == :T
-        dim = length(hsb.X₀)>1 ? :MDC : :UDC
+        dimCov = length(hsb.X₀)>1 ? :MDC : :UDC
 
-        plot(hsb, symbol2typeplot[type], symboltypecov[dim]; options...)
+        plot(hsb, symbol2typeplot[type], symboltypecov[dimCov],symboltypeprocess[dimProcess] ; options...)
     else
-        plot(hsb, type; options...)
+        plot(hsb, type,symboltypeprocess[dimProcess] ; options...)
     end
 end
 
-function plot(hsb::HawkesStochasticBaseline, ::Type{TrajectoryPlot},::Type{UniDimCov}; bin_cov::Float64=0.1, bin_time::Float64=0.1)
+function plot(hsb::HawkesStochasticBaseline, ::Type{TrajectoryPlot},::Type{UniDimCov}, ::Type{UninomialProcess}; bin_cov::Float64=0.1, bin_time::Float64=0.1)
 
 
     maxCov, minCov = maximum(hsb.timedata.cov)+bin_cov, minimum(hsb.timedata.cov)-bin_cov
@@ -37,55 +39,28 @@ function plot(hsb::HawkesStochasticBaseline, ::Type{TrajectoryPlot},::Type{UniDi
     ax, hm = heatmap(f[1,1][1,1],tgrid, xgrid, baselineHeatMap,colormap=:deep)
     Colorbar(f[1,1][1,2], hm)  
     lines!(hsb.timedata.time, hsb.timedata.cov)
-    scatter!(hsb.timedata[hsb.timedata.timestamps,:time], hsb.timedata[hsb.timedata.timestamps,:cov], color=(:orange), markersize=7)
+    scatter!(ax,hsb.timedata[hsb.timedata.timestamps.>=1,:time], hsb.timedata[hsb.timedata.timestamps.>=1,:cov], color = hsb.timedata[hsb.timedata.timestamps.>=1,:timestamps])
     f
 end
 
-function plot(hsb::HawkesStochasticBaseline, ::Type{IntensityPlot})
 
-    hsb.timedata[!, :baselineValue] = hsb.gₘ.(timedata.cov,hsb.m)
-    hsb.timedata[!, :intensityVal] = hsb.timedata[:, :baselineValue]
+function plot(hsb::HawkesStochasticBaseline, ::Type{TrajectoryPlot},::Type{UniDimCov}, ::Type{MultinomialProcess}; bin_cov::Float64=0.1, bin_time::Float64=0.1)
 
-    intensityJumpTime= hsb.timedata[hsb.timedata.timestamps,:baselineValue][1]
+    maxCov, minCov = maximum(hsb.timedata.cov)+bin_cov, minimum(hsb.timedata.cov)-bin_cov
+    xgrid = minCov-bin_cov:bin_cov: maxCov+bin_cov
+    tgrid = hsb.timedata.time[1]:bin_time:hsb.timedata.time[end]
 
-    lastJump, lastBas = hsb.timedata[hsb.timedata.timestamps,[:time, :baselineValue]][1,:]
-
-    for simul in eachrow(hsb.timedata[(hsb.timedata.timestamps).& (hsb.timedata.time.>lastJump),:])    
-
-        hsb.timedata[(hsb.timedata.time .> lastJump).&(hsb.timedata.time.<= simul.time),:] = transform!(hsb.timedata[(hsb.timedata.time .> lastJump).&(hsb.timedata.time.<= simul.time),:], [:intensityVal, :time]=> ((i, t) -> i .+ exp.(-hsb.b*( t.-lastJump)).*(intensityJumpTime .+ hsb.a .- lastBas))=> :intensityVal)
-
-        intensityJumpTime =  simul.baselineValue + exp(-hsb.b*( simul.time-lastJump)).*(intensityJumpTime .+ hsb.a .- lastBas)
-
-        lastJump, lastBas = simul.time, simul.baselineValue
-
-    end
-    plot( hsb.timedata.time, hsb.timedata.intensityVal, label ="intensity")
+    
+    f = Figure()
+    ax = Axis(f[1, 1])
+    lines!(ax,hsb.timedata.time, hsb.timedata.cov)
+    scatter!(ax,hsb.timedata[hsb.timedata.timestamps.>=1,:time], hsb.timedata[hsb.timedata.timestamps.>=1,:cov], color = hsb.timedata[hsb.timedata.timestamps.>=1,:timestamps])
+    f
 end
 
 
-function plot(hsb::HawkesStochasticBaseline,::Type{IntensityProcessPlot})
 
-    hsb.timedata[!, :baselineValue] = hsb.gₘ.(hsb.timedata.cov,hsb.m)
-    hsb.timedata[!, :intensityVal] = hsb.timedata[:, :baselineValue]
-
-    hsb.intensityJumpTime= hsb.timedata[hsb.timedata.timestamps,:baselineValue][1]
-
-    lastJump, lastBas = hsb.timedata[hsb.timedata.timestamps,[:time, :baselineValue]][1,:]
-
-    for simul in eachrow(hsb.timedata[(hsb.timedata.timestamps).& (hsb.timedata.time.>lastJump),:])    
-
-        transform!( view( hsb.timedata,(hsb.timedata.time .> lastJump).&(hsb.timedata.time.<= simul.time), : ), [:intensityVal, :time]=> ((i, t) -> i .+ exp.(-hsb.b*( t.-lastJump)).*(intensityJumpTime .+ hsb.a .- lastBas))=> :intensityVal)
-        intensityJumpTime =  simul.baselineValue + exp(-hsb.b*( simul.time-lastJump)).*(intensityJumpTime .+ hsb.a .- lastBas)
-        lastJump, lastBas = simul.time, simul.baselineValue
-    end
-    
-    plt = plot( hsb.timedata.time, hsb.timedata.intensityVal, label ="intensity")
-    plot!(plt, hsb.timedata[hsb.timedata.timestamps .|| hsb.timedata.time .== 0, :time ] , 0:size(hsb.timedata[hsb.timedata.timestamps, :time],1),  linetype=:steppre, label="N")
-    
-end
-
-
-function plot(model::HawkesStochasticBaseline,  ::Type{TrajectoryPlot}, ::Type{MultiDimCov};dim_1::Int64=1, dim_2::Int64=2, bin_cov::Float64 = 0.001)
+function plot(model::HawkesStochasticBaseline,  ::Type{TrajectoryPlot}, ::Type{MultiDimCov}, ::Type{UninomialProcess}  ;dim_1::Int64=1, dim_2::Int64=2, bin_cov::Float64 = 0.001)
 
     Xₜ= [model.timedata.cov'...;]
     Xₜₖ = [model.timedata[model.timedata.timestamps, :cov]'...;]
@@ -107,3 +82,76 @@ function plot(model::HawkesStochasticBaseline,  ::Type{TrajectoryPlot}, ::Type{M
     f
 end
 
+function plot(model::HawkesStochasticBaseline,  ::Type{TrajectoryPlot}, ::Type{MultiDimCov}, ::Type{MultinomialProcess}  ;dim_1::Int64=1, dim_2::Int64=2, bin_cov::Float64 = 0.001)
+
+    Xₜ= [model.timedata.cov'...;]
+    Xₜₖ = [model.timedata[model.timedata.timestamps.>=1, :cov]'...;]
+
+    xgrid = minimum(Xₜ[:,dim_1])-bin_cov:bin_cov: maximum(Xₜ[:,dim_1])+bin_cov
+    ygrid =  minimum(Xₜ[:,dim_2])-bin_cov:bin_cov: maximum(Xₜ[:,dim_2])+bin_cov
+
+    gₘX = [[model.gₘ([x,y], model.m) for x in xgrid] for y in ygrid]
+    gₘX = [gₘX'...; ]
+
+
+    f = Figure()
+    ax = Axis(f[1, 1])
+    lines!(ax,Xₜ[:,dim_1], Xₜ[:,dim_2], color=(:black, 0.7),linewidth=0.8)
+    scatter!(ax,Xₜₖ[:,dim_1], Xₜₖ[:,dim_2], color= model.timedata[model.timedata.timestamps.>=1, :timestamps])
+
+    f
+end
+
+
+
+
+function plot(hsb::HawkesStochasticBaseline, ::Type{IntensityPlot},::Type{UninomialProcess})
+
+    timedata = hsb.timedata
+    hsb.timedata[!, :baselineValue] = hsb.gₘ.(timedata.cov,hsb.m)
+    hsb.timedata[!, :intensityVal] = hsb.timedata[:, :baselineValue]
+
+    intensityJumpTime= hsb.timedata[hsb.timedata.timestamps,:baselineValue][1]
+
+    lastJump, lastBas = hsb.timedata[hsb.timedata.timestamps,[:time, :baselineValue]][1,:]
+
+    for simul in eachrow(hsb.timedata[(hsb.timedata.timestamps).& (hsb.timedata.time.>lastJump),:])    
+
+        hsb.timedata[(hsb.timedata.time .> lastJump).&(hsb.timedata.time.<= simul.time),:] = transform!(hsb.timedata[(hsb.timedata.time .> lastJump).&(hsb.timedata.time.<= simul.time),:], [:intensityVal, :time]=> ((i, t) -> i .+ exp.(-hsb.b*( t.-lastJump)).*(intensityJumpTime .+ hsb.a .- lastBas))=> :intensityVal)
+
+        intensityJumpTime =  simul.baselineValue + exp(-hsb.b*( simul.time-lastJump)).*(intensityJumpTime .+ hsb.a .- lastBas)
+
+        lastJump, lastBas = simul.time, simul.baselineValue
+
+    end
+    plot( hsb.timedata.time, hsb.timedata.intensityVal, label ="intensity")
+end
+
+
+
+
+
+
+
+
+
+function plot(hsb::HawkesStochasticBaseline,::Type{IntensityProcessPlot},::Type{UninomialProcess})
+
+    hsb.timedata[!, :baselineValue] = hsb.gₘ.(hsb.timedata.cov,hsb.m)
+    hsb.timedata[!, :intensityVal] = hsb.timedata[:, :baselineValue]
+
+    hsb.intensityJumpTime= hsb.timedata[hsb.timedata.timestamps,:baselineValue][1]
+
+    lastJump, lastBas = hsb.timedata[hsb.timedata.timestamps,[:time, :baselineValue]][1,:]
+
+    for simul in eachrow(hsb.timedata[(hsb.timedata.timestamps).& (hsb.timedata.time.>lastJump),:])    
+
+        transform!( view( hsb.timedata,(hsb.timedata.time .> lastJump).&(hsb.timedata.time.<= simul.time), : ), [:intensityVal, :time]=> ((i, t) -> i .+ exp.(-hsb.b*( t.-lastJump)).*(intensityJumpTime .+ hsb.a .- lastBas))=> :intensityVal)
+        intensityJumpTime =  simul.baselineValue + exp(-hsb.b*( simul.time-lastJump)).*(intensityJumpTime .+ hsb.a .- lastBas)
+        lastJump, lastBas = simul.time, simul.baselineValue
+    end
+    
+    plt = plot( hsb.timedata.time, hsb.timedata.intensityVal, label ="intensity")
+    plot!(plt, hsb.timedata[hsb.timedata.timestamps .|| hsb.timedata.time .== 0, :time ] , 0:size(hsb.timedata[hsb.timedata.timestamps, :time],1),  linetype=:steppre, label="N")
+    
+end
