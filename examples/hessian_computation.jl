@@ -55,7 +55,7 @@ function hessian(model::HawkesStochasticBaseline, df::DataFrame)
     λTₖ = timeJump.gₘXₜ[1]
 
 
-    ∇²l  = (∇²λTₖ - ∇λTₖ*∇λTₖ')/λTₖ^2 - ∇²Λ
+    ∇²l  = (λTₖ*∇²λTₖ - ∇λTₖ*∇λTₖ')/λTₖ^2 - ∇²Λ
 
     aux = model.a
     stockVariable = ∇λTₖ[2]

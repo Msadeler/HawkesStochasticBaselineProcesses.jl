@@ -1,15 +1,15 @@
 
-function likelihood(model::HawkesStochasticBaseline, θ::Vector{Float64}, df::DataFrame)
+
+
+
+
+
+
+function likelihood(model::HawkesStochasticBaseline, θ::Vector{Float64}, df::DataFrame,::Type{UniDimCov})
 
     params!(model,θ)
     if isnothing(model.timedata)
         data!(model, df)
-    end
-    if isnothing(model.gᵢX)
-        gᵢX!(model, [[[gᵢ(Xₜ) for gᵢ in  model.gₘ.coeff] for Xₜ in df.cov]'...;])
-    end
-    if isnothing(model.∫gᵢX)
-        ∫gᵢX!(model, [ solve(SampledIntegralProblem(model.gᵢX[:,n], model.timedata.time; dim = 1), SimpsonsRule()).u for n in 1:length(model.m)] )
     end
 
     df[!,:gₘXₜ] = model.gᵢX*model.m

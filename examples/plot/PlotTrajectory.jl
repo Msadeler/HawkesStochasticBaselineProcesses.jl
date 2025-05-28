@@ -1,3 +1,4 @@
+using CairoMakie
 using HawkesStochasticBaselineProcesses
 using LinearAlgebra
 
@@ -6,7 +7,7 @@ using LinearAlgebra
 ####################################################
 
 
-gₘ = Baseline([[LinearFamilyBaseline([x->abs(x)/200])],[LinearFamilyBaseline([x-> 2-2*abs(x)/(abs(x)+1) ])]])
+gₘ = Baseline([LinearFamilyBaseline([x->abs(x)/200]),LinearFamilyBaseline([x-> 2-2*abs(x)/(abs(x)+1)])])
 
 ### dXₜ = -b(a-Xₜ)dt + σdWₜ 
 

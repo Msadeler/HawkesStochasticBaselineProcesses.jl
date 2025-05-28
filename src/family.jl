@@ -37,8 +37,8 @@ end
 
 
 struct Baseline 
-    coeff::Vector{Vector{AbstractFamilyBaseline}}
+    coeff::Vector{AbstractFamilyBaseline}
 end
 
 
-(g::Baseline)(x::Union{<:Real,Vector},m::BaselineParameters) = [f(x, m[i])  for i=eachindex(m) for f in g.coeff[i]]
+(g::Baseline)(x::Union{<:Real,Vector},m::BaselineParameters) = [g.coeff[i](x, m[i])  for i=eachindex(m)]

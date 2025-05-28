@@ -15,3 +15,4 @@
 
 ### truc généraux
 * codage subsampling test 
+* changer le type de baseline
