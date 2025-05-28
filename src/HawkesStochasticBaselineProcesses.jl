@@ -17,6 +17,19 @@ const Parameters = Vector{Float64}
 const BaselineParameters = Vector{Vector{Float64}}
 const SubBaselineParameters = Union{Float64,Vector{Float64}}
 
+abstract type MultiDimCov end
+abstract type UniDimCov end
+abstract type Multinomial end
+abstract type Uninomial end
+
+
+const symboltypecov = Dict(
+    :MDC=> MultiDimCov,
+    :UDC => UniDimCov
+)
+
+
+
 
 export plot
 export likelihood, gradient
