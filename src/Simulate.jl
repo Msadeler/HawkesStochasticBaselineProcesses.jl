@@ -1,16 +1,6 @@
 import Base.rand
 
 
-abstract type MultiDimCov end
-abstract type UniDimCov end
-
-
-
-const symboltypecov = Dict(
-    :MDC=> MultiDimCov,
-    :UDC => UniDimCov
-)
-
 function rand(hsb::HawkesStochasticBaseline, max_time::Float64)
 
     n = nbdim(hsb)
