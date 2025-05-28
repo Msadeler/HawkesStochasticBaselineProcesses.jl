@@ -12,6 +12,7 @@
 * code vraisemblance en multidim
 * Hessienne à coder & Gradient pour la vraisemblance
 * code test en multidim 
+* code simu nombre de points
 
 ### truc généraux
 * codage subsampling test 

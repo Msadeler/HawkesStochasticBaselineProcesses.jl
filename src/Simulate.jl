@@ -10,7 +10,7 @@ end
 
 function rand(hsb::HawkesStochasticBaseline, max_time::Float64, ::Type{UniDimCov})
 
-    n = nbdim(hsb)
+    n = size(hsb).mark
     
     result = (time=Float64[hsb.t₀],timestamps=Int64[0],cov=[hsb.X₀])    
     
@@ -79,7 +79,7 @@ end
 
 function rand(hsb::HawkesStochasticBaseline, max_time::Float64, ::Type{MultiDimCov})
 
-    n = nbdim(hsb)
+    n = size(hsb).mark
     
     result = (time=Float64[hsb.t₀],timestamps=Int64[0],cov=[hsb.X₀])    
     

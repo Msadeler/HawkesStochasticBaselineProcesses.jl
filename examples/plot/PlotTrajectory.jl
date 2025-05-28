@@ -38,7 +38,7 @@ plot(hsb, :T)
 
 x¹ = [0.1,0.1]
 x² = [-0.25, -0.25]
-gₘ = Baseline( [[LinearFamilyBaseline([ x-> 1-exp(-norm(x-x¹)*10), x-> exp(-norm(x-x¹)*10 )])] ,[LinearFamilyBaseline([ x-> 1-exp(-norm(x-x²)*10), x-> exp(-norm(x-x²)*10 )])]  ] )
+gₘ = Baseline( [LinearFamilyBaseline([ x-> 1-exp(-norm(x-x¹)*10), x-> exp(-norm(x-x¹)*10 )]), LinearFamilyBaseline([ x-> 1-exp(-norm(x-x²)*10), x-> exp(-norm(x-x²)*10 )])]   )
 
 ### dXₜ = -b(a-Xₜ)dt + σdWₜ 
 

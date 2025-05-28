@@ -1,3 +1,50 @@
+function loglikelihood(hsb::HawkesStochasticBaseline, θ::Vector, df::DataFrame)
+    
+    params!(hsb,θ)
+    n = size(hsb).mark
+    println(hsb.b)
+
+    ### Database with the jump times
+    Jumpdb = df[df.timestamps.>=1,:] 
+
+
+    ### init variables
+    Tₖ₋₁ = Jumpdb.time[1]
+
+    Yᵢⱼ = zeros((n,n))
+    Yᵢⱼ[:,Jumpdb.timestamps[1]] = hsb.a[:,Jumpdb.timestamps[1]]
+
+    gₘXₜ  = reduce(hcat,[hsb.gₘ(x,hsb.m) for x in df.cov])
+    
+    
+    if sum(gₘXₜ.<0)>0 ||sum( hsb.b .<= 0)>0 || sum(hsb.a .<=0)>0
+        -1e30    
+    else
+
+        ∫gₘXₜ = [ solve(SampledIntegralProblem(gₘXₜ[n,:], df.time; dim = 1), SimpsonsRule()).u for n in 1:length(hsb.m)]
+
+
+        l = log(hsb.gₘ(Jumpdb.cov[1], hsb.m)[Jumpdb.timestamps[1]]) - sum(∫gₘXₜ)
+    
+        for jump in eachrow(Jumpdb[2:end,:])
+    
+            λTₖ = hsb.gₘ(jump.cov, hsb.m) .+ sum.( eachrow(Yᵢⱼ.*exp.(-hsb.b.*(jump.time - Tₖ₋₁))) )
+            Λ =  sum.(eachrow(Yᵢⱼ ./ hsb.b .* (1 .- exp.(-hsb.b.*(jump.time - Tₖ₋₁)))))
+    
+  
+            Yᵢⱼ = Yᵢⱼ.*exp.(-hsb.b.*(jump.time - Tₖ₋₁))
+            Yᵢⱼ[:,jump.timestamps] += hsb.a[:,jump.timestamps]
+            
+            l += log(λTₖ[jump.timestamps]) - sum(Λ)
+            Tₖ₋₁ = jump.time
+        end
+    
+        jump = df[end,:]
+        Λ =  sum.(eachrow(Yᵢⱼ ./ hsb.b .* (1 .- exp.(-hsb.b.*(jump.time - Tₖ₋₁)))))
+        l -= sum(Λ)
+    end
+
+end
 
 
 
@@ -5,9 +52,10 @@
 
 
 
-function likelihood(model::HawkesStochasticBaseline, θ::Vector{Float64}, df::DataFrame,::Type{UniDimCov})
+function likelihoodTest(model::HawkesStochasticBaseline, θ::Vector{Float64}, df::DataFrame,::Type{UniDimCov})
 
     params!(model,θ)
+    
     if isnothing(model.timedata)
         data!(model, df)
     end

@@ -8,10 +8,12 @@ using  Optim
 using Polynomials
 using LinearAlgebra
 using Makie
-import Makie.plot
 using Statistics
-import Base.rand
 using HypothesisTests
+
+import Base.rand
+import Makie.plot
+import Distributions:params,params!
 
 
 const Parameters = Vector{Float64}
@@ -36,9 +38,9 @@ const symboltypeprocess = Dict(
 
 
 export plot
-export likelihood, gradient
+export loglikelihood, gradient
 export mle
-export nbparams,params, params!, data!, gᵢX!,∫gᵢX! , nbdim
+export nbparams,params, params!, data!, gᵢX!,∫gᵢX! 
 export UnivariatePolynomialFamilyBaseline, LinearFamilyBaseline,hessian,baseline, AbstractFamilyBaseline
 export fisher
 export  OneSampleTTest, EqualCoeffTest

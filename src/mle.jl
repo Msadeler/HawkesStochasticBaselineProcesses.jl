@@ -25,7 +25,7 @@ function mle(model::HawkesStochasticBaseline; data::DataFrame=DataFrame(), θ::U
 
     function f(θ′)
         θ[unfixed] = θ′
-        -likelihood(model, θ,data)
+        -loglikelihood(model, θ,data)
     end
 
     if method isa Optim.ZerothOrderOptimizer
