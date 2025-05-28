@@ -1,6 +1,6 @@
-using CairoMakie
 using HawkesStochasticBaselineProcesses
 using LinearAlgebra
+using CairoMakie
 
 ####################################################
 #################### 1D Plot #######################

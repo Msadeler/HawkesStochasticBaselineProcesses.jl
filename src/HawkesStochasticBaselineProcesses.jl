@@ -7,7 +7,8 @@ using Integrals
 using  Optim
 using Polynomials
 using LinearAlgebra
-using CairoMakie
+using Makie
+import Makie.plot
 using Statistics
 import Base.rand
 using HypothesisTests
