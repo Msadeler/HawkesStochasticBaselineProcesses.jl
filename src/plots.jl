@@ -3,12 +3,22 @@ abstract type TrajectoryPlot end
 abstract type IntensityPlot end
 abstract type IntensityProcessPlot end
 abstract type TrajectoryPlotProjected end
+abstract type MultiDimCov end
+abstract type UniDimCov end
+
+
 
 const symbol2typeplot = Dict(
     :T => TrajectoryPlot,
     :TP => TrajectoryPlotProjected,
     :I => IntensityPlot,
     :IP => IntensityProcessPlot
+)
+
+
+const symboltypecov = Dict(
+    :MDC=> MultiDimCov,
+    :UDC => UniDimCov
 )
 
 
