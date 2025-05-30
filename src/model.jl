@@ -1,7 +1,6 @@
 abstract type HawkesProcess  end
 
 
-
 mutable struct HawkesStochasticBaseline <: HawkesProcess
     a::Union{Float64,Vector,Matrix}
     b::Union{Float64,Vector,Matrix}
@@ -19,6 +18,7 @@ mutable struct HawkesStochasticBaseline <: HawkesProcess
 end
 
 HawkesStochasticBaseline(a::Union{Float64,Vector,Matrix}, b::Union{Float64,Vector,Matrix}, m::BaselineParameters=1.0 ; Mmax::Union{<:Real,Vector}   =1e15, gₘ::Baseline=Baseline([[LinearFamilyBaseline([x -> 1])]]), drift::Function = (x,t)->0.0, diffusion::Function=(x,t)->0.0, t₀::Real=0.0, X₀::Union{Real,Vector}=0.0,timedata::Nothing=nothing, gᵢX::Union{Nothing,Matrix}=nothing,∫gᵢX::Union{Nothing, Vector}=nothing) = HawkesStochasticBaseline(a,b, m , Mmax,gₘ, drift, diffusion, t₀,X₀,timedata,gᵢX,∫gᵢX)   
+
 
 
 function Base.size(model::HawkesStochasticBaseline)

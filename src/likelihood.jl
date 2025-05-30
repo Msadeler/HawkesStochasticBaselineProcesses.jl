@@ -2,7 +2,6 @@ function loglikelihood(hsb::HawkesStochasticBaseline, θ::Vector, df::DataFrame)
     
     params!(hsb,θ)
     n = size(hsb).mark
-    println(hsb.b)
 
     ### Database with the jump times
     Jumpdb = df[df.timestamps.>=1,:] 
@@ -21,8 +20,9 @@ function loglikelihood(hsb::HawkesStochasticBaseline, θ::Vector, df::DataFrame)
         -1e30    
     else
 
-        ∫gₘXₜ = [ solve(SampledIntegralProblem(gₘXₜ[n,:], df.time; dim = 1), SimpsonsRule()).u for n in 1:length(hsb.m)]
+        #∫gₘXₜ = [ solve(SampledIntegralProblem(gₘXₜ[i,:], df.time; dim = 1), SimpsonsRule()).u for i in 1:length(hsb.m)]
 
+        ∫gₘXₜ = [ integral(hsb.gₘ.coeff[i], hsb.m[i], df ) for i in eachindex(hsb.gₘ.coeff)]
 
         l = log(hsb.gₘ(Jumpdb.cov[1], hsb.m)[Jumpdb.timestamps[1]]) - sum(∫gₘXₜ)
     

@@ -4,7 +4,13 @@ using LinearAlgebra
 
 x¹ = [0.1,0.1]
 x² = [-0.25, -0.25]
-gₘ = Baseline( [LinearFamilyBaseline([ x-> 1-exp(-norm(x-x¹)*10), x-> exp(-norm(x-x¹)*10 )]), LinearFamilyBaseline([ x-> 1-exp(-norm(x-x²)*10), x-> exp(-norm(x-x²)*10 )])]   )
+
+
+gₘ = Baseline( [LinearFamilyBaseline([ x-> 1-exp(-norm(x-x¹)*10), x-> exp(-norm(x-x¹)*10 )]), 
+    LinearFamilyBaseline([ x-> 1-exp(-norm(x-x²)*10), x-> exp(-norm(x-x²)*10 )])]   
+    )
+
+
 
 ### dXₜ = -b(a-Xₜ)dt + σdWₜ 
 
@@ -17,12 +23,39 @@ a =[0.6 0.2 ;0.3  0.6]
 b =[2.0; 1.5]
 m = [[0.2, 1.0],[0.5, 1.0]]
 
+
 model = HawkesStochasticBaseline(a,b,m;Mmax= 20.0, gₘ = gₘ, drift = drift, diffusion = diffusion, X₀=[0.0,0.0] )
-df = rand(model, 700.0)
+df = rand(model, 20.0)
+
+HawkesStochasticBaselineProcesses.integral(gₘ.coeff[1],m[1], df)
 
 
-timeBGFS = time()
-modelBGFS  = HawkesStochasticBaseline(ones((2,2)),2 .* ones((2,1)), [[1.0, 1.0],[1.0, 1.0]], gₘ=gₘ)
-mle(modelBGFS; data=df)
-timeBGFS =  time()-timeBGFS 
+df = rand(model, 1000.0)
+
+loglikelihood(model, params(model),df)
+
+
+df[df.timestamps.>=1,: ]
+
+nrep =1
+estimTime = 0
+simuTime = 0
+θhat= zeros((nrep,length(model)))
+
+for k in 1:nrep
+
+    start = time()
+    df = rand(model, 1000.0)
+    simuTime += time()- start
+
+    timeBGFS = time()
+    modelBGFS  = HawkesStochasticBaseline(ones((2,2)),2 .* ones((2,1)), [[1.0, 1.0],[1.0, 1.0]], gₘ=gₘ)
+    mle(modelBGFS; data=df)
+    timeBGFS =  time()-timeBGFS 
+    estimTime+=timeBGFS
+
+    θhat[k,:]= params(modelBGFS)
+
+
+end
 

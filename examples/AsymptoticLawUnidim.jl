@@ -1,5 +1,5 @@
 using HawkesStochasticBaselineProcesses
-using  DataFrames
+using DataFrames
 using Optim
 using Plots
 using Integrals

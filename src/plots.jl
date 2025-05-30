@@ -15,7 +15,7 @@ const symbol2typeplot = Dict(
 
 function plot(hsb::HawkesStochasticBaseline,type::Symbol=:T; options...)
     
-    dimProcess = nbdim(hsb) > 1 ? :MP : :UP
+    dimProcess = size(hsb).mark > 1 ? :MP : :UP
 
     if type == :T
         dimCov = length(hsb.X₀)>1 ? :MDC : :UDC

@@ -19,12 +19,29 @@ end
 
 
 
-struct LinearFamilyBaseline <:AbstractFamilyBaseline
-    coeff::Union{Matrix{<:Function}, Vector{<:Function}, Vector{<:Vector{<:Function}}}
+mutable struct LinearFamilyBaseline <:AbstractFamilyBaseline
+    coeff::Union{Vector{<:Function}, Vector{<:Vector{<:Function}}}
+    gX::Union{Nothing,Matrix{Float64}}
+    ∫gX::Union{Nothing,Vector{Float64}}
 end
 
+LinearFamilyBaseline(coeff::Union{Vector{<:Function}, Vector{<:Vector{<:Function}}};gX::Union{Nothing,Vector{Float64}} =nothing, ∫gX::Union{Nothing,Matrix{Float64}}=nothing) = LinearFamilyBaseline(coeff, gX, ∫gX)
 
-(gₘ::LinearFamilyBaseline)(x::Union{<:Real,Vector},m::SubBaselineParameters) = dot([gᵢ(x) for gᵢ in gₘ.coeff],m) 
+
+(gₘ::LinearFamilyBaseline)(x::Union{Float64,Vector},m::SubBaselineParameters) = dot([gᵢ(x) for gᵢ in gₘ.coeff],m) 
+
+function integral(gₘ::LinearFamilyBaseline,m::SubBaselineParameters, df::DataFrame)
+    
+    if isnothing(gₘ.gX)
+        gₘ.gX = [gᵢ(x) for x in df.cov, gᵢ in gₘ.coeff]
+    end
+    if isnothing(gₘ.∫gX)
+        gₘ.∫gX = [ solve(SampledIntegralProblem(gₘ.gX[:,i], df.time; dim = 1), SimpsonsRule()).u for i in eachindex(gₘ.coeff)]
+    end
+    gₘ.∫gX ⋅ m
+
+end
+
 
 function gradient(gₘ::LinearFamilyBaseline, x::Union{Real,Vector}, m::SubBaselineParameters)
     [fi(x) for fi in gₘ.coeff]   

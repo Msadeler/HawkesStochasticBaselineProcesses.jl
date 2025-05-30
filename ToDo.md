@@ -13,6 +13,7 @@
 * Hessienne à coder & Gradient pour la vraisemblance
 * code test en multidim 
 * code simu nombre de points
+* Vérif valeur vraisemblance avec pyhton
 
 ### truc généraux
 * codage subsampling test 
