@@ -1,6 +1,7 @@
 using HawkesStochasticBaselineProcesses
 using LinearAlgebra
-
+using Random
+using BenchmarkTools
 
 x¹ = [0.1,0.1]
 x² = [-0.25, -0.25]
@@ -14,28 +15,25 @@ gₘ = Baseline( [LinearFamilyBaseline([ x-> 1-exp(-norm(x-x¹)*10), x-> exp(-no
 
 ### dXₜ = -b(a-Xₜ)dt + σdWₜ 
 
+Random.seed!(0)
 
 drift(x,t)= 0.05
 diffusion(x,t)=-0.05.*x
 
 
-a =[0.6 0.2 ;0.3  0.6]
-b =[2.0; 1.5]
-m = [[0.2, 1.0],[0.5, 1.0]]
-
+a =[0.6 0.1 ;0.1  0.6]
+b =[2.0; 2.0]
+m = [[0.02, 1.0],[0.02, 1.0]]
 
 model = HawkesStochasticBaseline(a,b,m;Mmax= 20.0, gₘ = gₘ, drift = drift, diffusion = diffusion, X₀=[0.0,0.0] )
-df = rand(model, 20.0)
-
-HawkesStochasticBaselineProcesses.integral(gₘ.coeff[1],m[1], df)
-
 
 df = rand(model, 1000.0)
 
-loglikelihood(model, params(model),df)
+HawkesStochasticBaselineProcesses.prepareintegral!(model.gₘ, df)
+
+@btime loglikelihood($model, params($model),$df)
 
 
-df[df.timestamps.>=1,: ]
 
 nrep =1
 estimTime = 0
@@ -58,4 +56,3 @@ for k in 1:nrep
 
 
 end
-

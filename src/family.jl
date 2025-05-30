@@ -30,16 +30,21 @@ LinearFamilyBaseline(coeff::Union{Vector{<:Function}, Vector{<:Vector{<:Function
 
 (gₘ::LinearFamilyBaseline)(x::Union{Float64,Vector},m::SubBaselineParameters) = dot([gᵢ(x) for gᵢ in gₘ.coeff],m) 
 
-function integral(gₘ::LinearFamilyBaseline,m::SubBaselineParameters, df::DataFrame)
+
+
+function prepareintegral!(gₘ::LinearFamilyBaseline, df::DataFrame)
     
     if isnothing(gₘ.gX)
         gₘ.gX = [gᵢ(x) for x in df.cov, gᵢ in gₘ.coeff]
     end
+
     if isnothing(gₘ.∫gX)
         gₘ.∫gX = [ solve(SampledIntegralProblem(gₘ.gX[:,i], df.time; dim = 1), SimpsonsRule()).u for i in eachindex(gₘ.coeff)]
     end
-    gₘ.∫gX ⋅ m
+end
 
+function integral(gₘ::LinearFamilyBaseline,m::SubBaselineParameters)
+    gₘ.∫gX ⋅ m
 end
 
 
@@ -55,6 +60,14 @@ end
 
 struct Baseline 
     coeff::Vector{AbstractFamilyBaseline}
+end
+
+function prepareintegral!(gₘ::Baseline, df::DataFrame)
+    
+    for i in eachindex(gₘ.coeff)
+        prepareintegral!(gₘ.coeff[i], df) 
+    end
+
 end
 
 

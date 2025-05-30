@@ -3,6 +3,8 @@ function mle(model::HawkesStochasticBaseline; data::DataFrame=DataFrame(), θ::U
     if isnothing(θ)
         θ = params(model)
     end
+
+    prepareintegral!(model.gₘ, data)
     
     data!(model, data)
     

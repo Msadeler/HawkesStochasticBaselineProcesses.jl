@@ -20,10 +20,9 @@ function loglikelihood(hsb::HawkesStochasticBaseline, θ::Vector, df::DataFrame)
         -1e30    
     else
 
-        #∫gₘXₜ = [ solve(SampledIntegralProblem(gₘXₜ[i,:], df.time; dim = 1), SimpsonsRule()).u for i in 1:length(hsb.m)]
+        ∫gₘXₜ = [ solve(SampledIntegralProblem(gₘXₜ[i,:], df.time; dim = 1), SimpsonsRule()).u for i in 1:length(hsb.m)]
 
-        ∫gₘXₜ = [ integral(hsb.gₘ.coeff[i], hsb.m[i], df ) for i in eachindex(hsb.gₘ.coeff)]
-
+        #∫gₘXₜ = [ integral(hsb.gₘ.coeff[i], hsb.m[i]) for i in eachindex(hsb.gₘ.coeff)]
         l = log(hsb.gₘ(Jumpdb.cov[1], hsb.m)[Jumpdb.timestamps[1]]) - sum(∫gₘXₜ)
     
         for jump in eachrow(Jumpdb[2:end,:])
@@ -32,7 +31,7 @@ function loglikelihood(hsb::HawkesStochasticBaseline, θ::Vector, df::DataFrame)
             Λ =  sum.(eachrow(Yᵢⱼ ./ hsb.b .* (1 .- exp.(-hsb.b.*(jump.time - Tₖ₋₁)))))
     
   
-            Yᵢⱼ = Yᵢⱼ.*exp.(-hsb.b.*(jump.time - Tₖ₋₁))
+            Yᵢⱼ .= Yᵢⱼ.*exp.(-hsb.b.*(jump.time - Tₖ₋₁))
             Yᵢⱼ[:,jump.timestamps] += hsb.a[:,jump.timestamps]
             
             l += log(λTₖ[jump.timestamps]) - sum(Λ)
