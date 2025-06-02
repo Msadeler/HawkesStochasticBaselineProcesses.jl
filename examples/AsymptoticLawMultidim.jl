@@ -1,7 +1,8 @@
 using HawkesStochasticBaselineProcesses
 using LinearAlgebra
 using Random
-using BenchmarkTools
+import BenchmarkTools: @btime
+
 
 x¹ = [0.1,0.1]
 x² = [-0.25, -0.25]
@@ -30,6 +31,8 @@ model = HawkesStochasticBaseline(a,b,m;Mmax= 20.0, gₘ = gₘ, drift = drift, d
 df = rand(model, 1000.0)
 
 HawkesStochasticBaselineProcesses.prepareintegral!(model.gₘ, df)
+
+
 
 @btime loglikelihood($model, params($model),$df)
 
