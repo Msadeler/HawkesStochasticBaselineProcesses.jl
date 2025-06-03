@@ -19,6 +19,22 @@ end
 
 
 
+
+
+struct GeneralFamilyBaseline <:AbstractFamilyBaseline
+    g::Function
+end
+
+(gₘ::GeneralFamilyBaseline)(x::Union{Float64,Vector},m::SubBaselineParameters) = gₘ.g(x,m)
+
+
+
+
+function integral(gₘ::GeneralFamilyBaseline,m::SubBaselineParameters, df::DataFrame)
+    solve(SampledIntegralProblem([gₘ.g(x,m) for x in df.cov], df.time; dim = 1), SimpsonsRule()).u
+end
+
+
 mutable struct LinearFamilyBaseline <:AbstractFamilyBaseline
     coeff::Union{Vector{<:Function}, Vector{<:Vector{<:Function}}}
     gX::Union{Nothing,Matrix{Float64}}
@@ -43,7 +59,7 @@ function prepareintegral!(gₘ::LinearFamilyBaseline, df::DataFrame)
     end
 end
 
-function integral(gₘ::LinearFamilyBaseline,m::SubBaselineParameters)
+function integral(gₘ::LinearFamilyBaseline,m::SubBaselineParameters,df::DataFrame)
     gₘ.∫gX ⋅ m
 end
 

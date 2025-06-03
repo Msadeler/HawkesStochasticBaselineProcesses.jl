@@ -1,11 +1,15 @@
 using HawkesStochasticBaselineProcesses
 using LinearAlgebra
 using Random
-import BenchmarkTools: @btime
 
 
 x¹ = [0.1,0.1]
 x² = [-0.25, -0.25]
+
+g(x,m) = m[1] + (m[2]-m[1])*exp(-m[3]*norm(x-x¹) )
+
+
+gm = GeneralFamilyBaseline( g)
 
 
 gₘ = Baseline( [LinearFamilyBaseline([ x-> 1-exp(-norm(x-x¹)*10), x-> exp(-norm(x-x¹)*10 )]), 

@@ -41,7 +41,7 @@ export plot
 export loglikelihood, gradient
 export mle
 export nbparams,params, params!, data!, gᵢX!,∫gᵢX! 
-export UnivariatePolynomialFamilyBaseline, LinearFamilyBaseline,hessian,Baseline, AbstractFamilyBaseline
+export  Baseline,LinearFamilyBaseline,hessian, AbstractFamilyBaseline, GeneralFamilyBaseline
 export fisher
 export  OneSampleTTest, EqualCoeffTest
 export HawkesStochasticBaseline
